@@ -31,3 +31,4 @@ app/client_secret_*.json
 .kotlinc/
 compose-cache/
 
+app/client_secret_*.json
