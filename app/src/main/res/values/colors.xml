@@ -7,4 +7,11 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- colores logo -->
+    <color name="equa_green_primary">#1E9C89</color>
+    <color name="equa_green_light">#6AE1D0</color>
+    <color name="equa_green_dark">#006A5C</color>
+    <color name="equa_paper_light">#E6F3F0</color>
+    <color name="equa_green_accent">#4BCFB8</color>
+    <color name="splash_screen_background">#006A5C</color>
 </resources>
