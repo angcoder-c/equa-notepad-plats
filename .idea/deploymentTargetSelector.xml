@@ -8,9 +8,6 @@
       <SelectionState runConfigName="BookScreenPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="ProfileScreenPreview">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="FormulaCalculatorScreenPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
@@ -21,6 +18,9 @@
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
       <SelectionState runConfigName="NewBookPreview">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="NewFormulaPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>
