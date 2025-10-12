@@ -7,8 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 data class ProfileUiState(
     val name: String = "",
-    val lastName: String = "",
-    val role: String = "",
+    val email: String = "",
     val isLoading: Boolean = false
 )
 
@@ -23,17 +22,7 @@ class ProfileViewModel : ViewModel() {
     private fun loadProfile() {
         _uiState.value = _uiState.value.copy(
             name = "Test name",
-            lastName = "Test last name",
-            role = "Test role"
-        )
-    }
-
-    fun changePassword() {}
-
-    fun updateProfile(name: String, lastName: String) {
-        _uiState.value = _uiState.value.copy(
-            name = name,
-            lastName = lastName
+            email = "test@email.com",
         )
     }
 }

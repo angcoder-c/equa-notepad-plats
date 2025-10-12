@@ -2,10 +2,8 @@ package com.example.equa_notepad_plats.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
-
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val EquaGreenPrimary = Color(0xFF1E9C89)    // Verde teal oscuro
+val EquaGreenLight = Color(0xFF6AE1D0)     // Verde teal claro
+val EquaGreenDark = Color(0xFF006A5C)      // Verde teal muy oscuro
+val EquaPaperLight = Color(0xFFE6F3F0)     // Verde muy claro (fondo papel)
+val EquaGreenAccent = Color(0xFF4BCFB8)

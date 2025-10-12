@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.jetbrains.kotlin.serialization)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -41,12 +42,26 @@ android {
 }
 
 dependencies {
+    // oauth
+    implementation("androidx.credentials:credentials:1.6.0-beta01")
+    implementation("androidx.credentials:credentials-play-services-auth:1.6.0-beta01")
+    implementation("com.google.android.libraries.identity.googleid:googleid:<latest version>")
+
+    // splash screen
+    implementation("androidx.core:core-splashscreen:1.0.1")
     // view model
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     // coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     // coil async image
     implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    // room
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.core.ktx)

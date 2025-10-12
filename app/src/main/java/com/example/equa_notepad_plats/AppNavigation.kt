@@ -69,10 +69,7 @@ fun AppNavigation(
             composable<Route.Book> { backStackEntry ->
                 val bookRoute: Route.Book = backStackEntry.toRoute()
                 BookScreen(
-                    bookId = bookRoute.bookId,
-                    onNavigateBack = {
-                        navController.navigateUp()
-                    }
+                    bookId = bookRoute.bookId
                 )
             }
 
