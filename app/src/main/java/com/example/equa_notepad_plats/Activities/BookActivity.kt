@@ -1,7 +1,11 @@
 package com.example.equa_notepad_plats.Activities
 
 import android.content.res.Configuration
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,8 +22,25 @@ import com.example.equa_notepad_plats.components.FormulaCard
 import com.example.equa_notepad_plats.components.HeaderBack
 import com.example.equa_notepad_plats.view_models.BookViewModel
 
+class BookActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            Scaffold() { innerPadding ->
+                AppTheme (darkTheme = isSystemInDarkTheme()){
+                    BookScreen(
+                        bookId = "1",
+                        modifier = Modifier.padding(innerPadding),
+                    )
+                }
+
+            }
+        }
+    }
+}
 @Composable
 fun BookScreen(
+    modifier: Modifier = Modifier,
     bookId: String,
     viewModel: BookViewModel = BookViewModel()
 ) {

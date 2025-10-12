@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -38,7 +39,7 @@ class ProfileActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
                 Scaffold() { innerPadding ->
-                    AppTheme {
+                    AppTheme (darkTheme = isSystemInDarkTheme()){
                         ProfileScreen(
                             modifier = Modifier.padding(innerPadding)
                         )
