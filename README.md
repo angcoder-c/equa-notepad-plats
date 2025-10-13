@@ -1,3 +1,3 @@
 # equa-notepad
 
-<img width="580" height="416" alt="image" src="https://github.com/user-attachments/assets/6a9fd8a5-39d8-4721-a04f-02263146b9ba" />
+<img width="1460" height="811" alt="image" src="https://github.com/user-attachments/assets/d372f988-e82b-4bad-9785-1f10a18651a7" />
