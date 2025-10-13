@@ -22,7 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.app.ui.theme.AppTheme
+import com.example.equa_notepad_plats.ui.theme.AppTheme
 import com.example.equa_notepad_plats.components.HeaderBack
 import com.example.equa_notepad_plats.view_models.PracticeViewModel
 import com.example.equa_notepad_plats.view_models.ProfileViewModel

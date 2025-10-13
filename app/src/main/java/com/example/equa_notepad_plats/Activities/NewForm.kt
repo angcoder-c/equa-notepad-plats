@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.dp
 import com.example.equa_notepad_plats.components.BookEdit
+import com.example.equa_notepad_plats.ui.theme.AppTheme
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,4 +46,12 @@ fun NewFormula(modifier: Modifier, onSubmited: ()->Unit){
 @Composable
 fun NewFormulaPreview(){
     NewFormula(modifier = Modifier, onSubmited = {})
+}
+
+@Preview
+@Composable
+fun NewFormulaDarkPreview(){
+    AppTheme(darkTheme = true) {
+        NewFormula(modifier = Modifier, onSubmited = {})
+    }
 }

@@ -42,6 +42,7 @@ android {
 }
 
 dependencies {
+    implementation("com.google.android.material:material:1.11.0")
     // oauth google identity
     implementation("androidx.credentials:credentials:1.6.0-beta01")
     implementation("androidx.credentials:credentials-play-services-auth:1.6.0-beta01")

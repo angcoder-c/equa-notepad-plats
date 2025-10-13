@@ -1,5 +1,6 @@
 package com.example.equa_notepad_plats.Activities
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.dp
 import com.example.equa_notepad_plats.components.BookEdit
+import com.example.equa_notepad_plats.ui.theme.AppTheme
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,4 +45,12 @@ fun NewBook(modifier: Modifier, onSubmited: ()->Unit){
 @Composable
 fun NewBookPreview(){
     NewBook(modifier = Modifier, onSubmited = {})
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun NewBookDarkPreview(){
+    AppTheme (darkTheme = true) {
+        NewBook(modifier = Modifier, onSubmited = {})
+    }
 }

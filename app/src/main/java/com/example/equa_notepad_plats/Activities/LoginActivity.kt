@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.app.ui.theme.AppTheme
+import com.example.equa_notepad_plats.ui.theme.AppTheme
 import com.example.equa_notepad_plats.view_models.LoginViewModel
 
 class LoginActivity : ComponentActivity() {
