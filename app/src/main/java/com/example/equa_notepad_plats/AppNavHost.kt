@@ -12,6 +12,7 @@ import com.example.equa_notepad_plats.data.DatabaseProvider
 import com.example.equa_notepad_plats.data.repositories.*
 import com.example.equa_notepad_plats.view_models.*
 import androidx.compose.ui.platform.LocalContext
+import com.example.equa_notepad_plats.data.SupabaseClientProvider
 
 @Composable
 fun AppNavHost(
@@ -29,7 +30,7 @@ fun AppNavHost(
     ) {
         composable<LoginRoute> {
             val repository = UserRepository(database)
-            val viewModel = LoginViewModel(repository)
+            val viewModel = LoginViewModel(repository,SupabaseClientProvider.client)
 
             LoginScreen(
                 viewModel = viewModel,

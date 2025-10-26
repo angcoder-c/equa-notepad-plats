@@ -20,7 +20,7 @@
 
 # Configuración local
 local.properties
-
+.env
 
 app/client_secret_*.json
 *.keystore

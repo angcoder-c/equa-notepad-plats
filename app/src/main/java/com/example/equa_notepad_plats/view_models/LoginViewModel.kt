@@ -1,6 +1,7 @@
 package com.example.equa_notepad_plats.view_models
 
 import android.app.Activity
+import android.webkit.ConsoleMessage
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
@@ -10,6 +11,12 @@ import com.example.equa_notepad_plats.data.repositories.UserRepository
 import com.example.equa_notepad_plats.data.local.entities.UserEntity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.Google
+import io.github.jan.supabase.auth.providers.builtin.IDToken
+import io.github.jan.supabase.exceptions.RestException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,7 +32,8 @@ sealed class LoginUiState {
 }
 
 class LoginViewModel(
-    private val repository: UserRepository
+    private val repository: UserRepository,
+    private val supabaseClient: SupabaseClient
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Initial)
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
@@ -54,8 +62,8 @@ class LoginViewModel(
             try {
                 val credentialManager = CredentialManager.create(activity)
 
-                val ranNonce: String = UUID.randomUUID().toString()
-                val bytes: ByteArray = ranNonce.toByteArray()
+                val rawNonce = UUID.randomUUID().toString()
+                val bytes = rawNonce.toByteArray()
                 val md = MessageDigest.getInstance("SHA-256")
                 val digest = md.digest(bytes)
                 val hashedNonce = digest.fold("") { str, it ->
@@ -77,24 +85,47 @@ class LoginViewModel(
                     context = activity
                 )
 
-                val credential = GoogleIdTokenCredential.createFrom(
+                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(
                     result.credential.data
                 )
 
-                val user = UserEntity(
-                    id = credential.id,
-                    name = credential.displayName ?: "Usuario",
-                    email = credential.id,
-                    photoUrl = credential.profilePictureUri?.toString(),
-                    isGuest = false
-                )
+                val googleIdToken = googleIdTokenCredential.idToken
 
-                repository.insertUser(user)
-                _uiState.value = LoginUiState.Success(user)
+                supabaseClient.auth.signInWith(IDToken) {
+                    idToken = googleIdToken
+                    provider = Google
+                    nonce = rawNonce
+                }
+
+                val session = supabaseClient.auth.currentSessionOrNull()
+                val supabaseUser = session?.user
+
+                if (supabaseUser != null) {
+                    val user = UserEntity(
+                        id = supabaseUser.id,
+                        name = googleIdTokenCredential.displayName ?: "Usuario",
+                        email = googleIdTokenCredential.id,
+                        photoUrl = googleIdTokenCredential.profilePictureUri?.toString(),
+                        isGuest = false
+                    )
+
+                    repository.insertUser(user)
+                    _uiState.value = LoginUiState.Success(user)
+                } else {
+                    _uiState.value = LoginUiState.Error("No se pudo obtener la sesión del usuario")
+                }
 
             } catch (e: GetCredentialException) {
                 _uiState.value = LoginUiState.Error(
                     "Error al iniciar sesión: ${e.message}"
+                )
+            } catch (e: GoogleIdTokenParsingException) {
+                _uiState.value = LoginUiState.Error(
+                    "Error al procesar token de Google: ${e.message}"
+                )
+            } catch (e: RestException) {
+                _uiState.value = LoginUiState.Error(
+                    "Error de Supabase: ${e.message}"
                 )
             } catch (e: Exception) {
                 _uiState.value = LoginUiState.Error(

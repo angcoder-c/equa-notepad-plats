@@ -1,5 +1,6 @@
 package com.example.equa_notepad_plats.components
 
+import android.app.Activity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,11 +16,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.equa_notepad_plats.view_models.LoginViewModel
+import io.github.jan.supabase.annotations.SupabaseInternal
+import com.example.equa_notepad_plats.BuildConfig
 
 @Composable
 fun LoginButtons(viewModel: LoginViewModel) {
+    val context = LocalContext.current
+
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxWidth()
@@ -27,7 +33,10 @@ fun LoginButtons(viewModel: LoginViewModel) {
         // login con google
         Button(
             onClick = {
-                // viewModel.signInWithGoogle(activity, "WEB_CLIENT_ID.apps.googleusercontent.com")
+                viewModel.signInWithGoogle(
+                    activity = context as Activity,
+                    webClientId = BuildConfig.WEB_CLIENT_ID
+                )
             },
             modifier = Modifier
                 .fillMaxWidth()

@@ -28,6 +28,7 @@ import com.example.equa_notepad_plats.LoginRoute
 import com.example.equa_notepad_plats.R
 import com.example.equa_notepad_plats.data.repositories.UserRepository
 import com.example.equa_notepad_plats.data.DatabaseProvider
+import com.example.equa_notepad_plats.data.SupabaseClientProvider
 import com.example.equa_notepad_plats.ui.theme.AppTheme
 import com.example.equa_notepad_plats.view_models.LoginUiState
 import com.example.equa_notepad_plats.view_models.LoginViewModel
@@ -65,12 +66,10 @@ class LoginActivity : ComponentActivity() {
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel = LoginViewModel(
-        UserRepository (
-            DatabaseProvider
-                .getDatabase(
-                    LocalContext.current
-                )
-        )
+        UserRepository(
+            DatabaseProvider.getDatabase(LocalContext.current)
+        ),
+        SupabaseClientProvider.client
     ),
     onLoginSuccess: () -> Unit
 ) {

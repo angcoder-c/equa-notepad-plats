@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -18,6 +21,27 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        val properties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            properties.load(FileInputStream(localPropertiesFile))
+        }
+
+        buildConfigField(
+            "String",
+            "WEB_CLIENT_ID",
+            "\"${properties.getProperty("WEB_CLIENT_ID", "")}\""
+        )
+        buildConfigField(
+            "String",
+            "SUPABASE_URL",
+            "\"${properties.getProperty("SUPABASE_URL", "")}\""
+        )
+        buildConfigField(
+            "String",
+            "SUPABASE_KEY",
+            "\"${properties.getProperty("SUPABASE_KEY", "")}\""
+        )
     }
 
     buildTypes {
@@ -38,6 +62,17 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.1"
+    }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
     }
 }
 
@@ -47,6 +82,12 @@ dependencies {
     implementation("androidx.credentials:credentials:1.6.0-beta01")
     implementation("androidx.credentials:credentials-play-services-auth:1.6.0-beta01")
     implementation("com.google.android.libraries.identity.googleid:googleid:<latest version>")
+
+    // Supabase
+    implementation(platform("io.github.jan-tennert.supabase:bom:3.0.2"))
+    implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.github.jan-tennert.supabase:auth-kt")
+    implementation("io.ktor:ktor-client-android:3.0.1")
 
     // splash screen
     implementation("androidx.core:core-splashscreen:1.0.1")
