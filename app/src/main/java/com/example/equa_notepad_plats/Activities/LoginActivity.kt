@@ -1,12 +1,11 @@
 package com.example.equa_notepad_plats.Activities
 
 import android.content.Intent
-import android.content.res.Configuration
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -15,181 +14,168 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.credentials.CredentialManager
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.navigation.compose.rememberNavController
+import com.example.equa_notepad_plats.AppNavHost
+import com.example.equa_notepad_plats.LoginRoute
+import com.example.equa_notepad_plats.R
+import com.example.equa_notepad_plats.data.repositories.UserRepository
+import com.example.equa_notepad_plats.data.DatabaseProvider
 import com.example.equa_notepad_plats.ui.theme.AppTheme
+import com.example.equa_notepad_plats.view_models.LoginUiState
 import com.example.equa_notepad_plats.view_models.LoginViewModel
+import com.example.equa_notepad_plats.components.LoginButtons
 
 class LoginActivity : ComponentActivity() {
 
-    private lateinit var credentialManager: CredentialManager
+    private lateinit var viewModel: LoginViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        // splash screen
+        installSplashScreen()
 
-        credentialManager = CredentialManager.create(this)
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
         setContent {
-            AppTheme(darkTheme = isSystemInDarkTheme()) {
-                Scaffold() { innerPadding ->
-                    LoginScreen(
-                        modifier = Modifier.padding(innerPadding),
-                        onSignInClick = { handleSignIn() },
-                        onSignUpClick = { handleSignUp() },
-                        credentialManager = credentialManager,
+            AppTheme (darkTheme = isSystemInDarkTheme()){
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    val navController = rememberNavController()
+
+                    AppNavHost(
+                        navController = navController,
+                        startDestination = LoginRoute
                     )
                 }
             }
         }
     }
-
-    private fun handleSignIn() {
-        val viewModel = LoginViewModel()
-        viewModel.signInWithGoogle(
-            credentialManager = credentialManager,
-            context = this,
-            onSuccess = { email, name ->
-                Log.d("LoginActivity", "Sign in successful: $email")
-                navigateToHome(email, name)
-            },
-            onError = { error ->
-                Log.e("LoginActivity", "Sign in error: $error")
-            }
-        )
-    }
-
-    private fun handleSignUp() {
-        val viewModel = LoginViewModel()
-        viewModel.signUpWithGoogle(
-            credentialManager = credentialManager,
-            context = this,
-            onSuccess = { email, name ->
-                Log.d("LoginActivity", "Sign up successful: $email")
-                navigateToHome(email, name)
-            },
-            onError = { error ->
-                Log.e("LoginActivity", "Sign up error: $error")
-            }
-        )
-    }
-
-    private fun navigateToHome(email: String, name: String) {
-        startActivity(Intent(this, HomeActivity::class.java).apply {
-            putExtra("email", email)
-            putExtra("name", name)
-        })
-        finish()
-    }
 }
 
 @Composable
 fun LoginScreen(
-    modifier: Modifier = Modifier,
-    onSignInClick: () -> Unit,
-    onSignUpClick: () -> Unit,
-    credentialManager: CredentialManager,
-    viewModel: LoginViewModel = viewModel()
+    viewModel: LoginViewModel = LoginViewModel(
+        UserRepository (
+            DatabaseProvider
+                .getDatabase(
+                    LocalContext.current
+                )
+        )
+    ),
+    onLoginSuccess: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "Deltime",
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(bottom = 48.dp)
-        )
+    // login sea exitoso
+    LaunchedEffect(uiState) {
+        if (uiState is LoginUiState.Success) {
+            onLoginSuccess()
+        }
+    }
 
-        Button(
-            onClick = onSignInClick,
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            ),
-            enabled = !uiState.isLoading
+                .fillMaxSize()
+                .padding(32.dp),
+            contentAlignment = Alignment.Center
         ) {
-            if (uiState.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
-                )
-            } else {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+
+                // logo
+                Surface(
+                    modifier = Modifier.size(120.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    color = Color(0xFFD2E4FF)
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.padding(24.dp)
+                    ) {
+
+                        Image(
+                            painter = painterResource(id = R.drawable.splash_logo_drawable),
+                            contentDescription = null
+                        )
+                    }
+                }
+
+                // titulo
                 Text(
-                    text = "Acceder con Google",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
+                    text = "Deltime",
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // botones
+                when (uiState) {
+                    is LoginUiState.Loading -> {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    is LoginUiState.Error -> {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Text(
+                                text = (uiState as LoginUiState.Error).message,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+
+                            LoginButtons(viewModel)
+                        }
+                    }
+
+                    else -> {
+                        LoginButtons(viewModel)
+                    }
+                }
             }
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Button(
-            onClick = onSignUpClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.primary
-            ),
-            border = ButtonDefaults.outlinedButtonBorder,
-            enabled = !uiState.isLoading
-        ) {
-            Text(
-                text = "Registrarse con Google",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-
-        if (uiState.error.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = uiState.error,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.error
-            )
-        }
     }
 }
 
+// preview ligth
 @Preview(showBackground = true)
 @Composable
-fun LoginScreenPreview() {
-    AppTheme(darkTheme = false) {
+fun LoginScreenPreview () {
+    AppTheme {
         LoginScreen(
-            onSignInClick = {},
-            onSignUpClick = {},
-            credentialManager = CredentialManager.create(LocalContext.current),
+            onLoginSuccess = {/*TODO*/ }
         )
     }
 }
-@Preview(showBackground = false, uiMode = Configuration.UI_MODE_NIGHT_YES)
+
+// preview dark
+@Preview(showBackground = true)
 @Composable
-fun LoginScreenDarkPreview() {
-    AppTheme(darkTheme = true) {
+fun LoginScreenDarkPreview () {
+    AppTheme (darkTheme = true) {
         LoginScreen(
-            onSignInClick = {},
-            onSignUpClick = {},
-            credentialManager = CredentialManager.create(LocalContext.current),
+            onLoginSuccess = {/*TODO*/ }
         )
     }
 }

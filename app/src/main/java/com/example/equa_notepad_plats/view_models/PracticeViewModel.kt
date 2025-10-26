@@ -27,8 +27,6 @@ class PracticeViewModel : ViewModel() {
                 )
                 // SIMULADO
                 delay(2000)
-
-                // TODO: Reemplazar con llamada real a tu API de IA
                 // val response = aiService.generateExercise(formulaId)
                 val generatedExercise = generateMockExercise(formulaId)
 
