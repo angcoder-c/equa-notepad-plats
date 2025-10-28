@@ -6,32 +6,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-import androidx.compose.ui.text.googlefonts.GoogleFont
-import androidx.compose.ui.text.googlefonts.Font
-import com.example.equa_notepad_plats.R
-import com.example.equa_notepad_plats.R.array.com_google_android_gms_fonts_certs
+val bodyFontFamily = FontFamily.Default
+val displayFontFamily = FontFamily.Default
 
-val provider = GoogleFont.Provider(
-    providerAuthority = "com.google.android.gms.fonts",
-    providerPackage = "com.google.android.gms",
-    certificates = com_google_android_gms_fonts_certs
-)
-
-val bodyFontFamily = FontFamily(
-    Font(
-        googleFont = GoogleFont("Lato"),
-        fontProvider = provider,
-    )
-)
-
-val displayFontFamily = FontFamily(
-    Font(
-        googleFont = GoogleFont("DM Serif Text"),
-        fontProvider = provider,
-    )
-)
-
-// Default Material 3 typography values
 val baseline = Typography()
 
 val AppTypography = Typography(
@@ -51,4 +28,3 @@ val AppTypography = Typography(
     labelMedium = baseline.labelMedium.copy(fontFamily = bodyFontFamily),
     labelSmall = baseline.labelSmall.copy(fontFamily = bodyFontFamily),
 )
-

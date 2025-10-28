@@ -1,18 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Equanotepadplats" parent="android:Theme.Material.Light.NoActionBar"/>
-    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/splash_screen_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
-        <item name="windowSplashScreenAnimationDuration">200</item>
-        <item name="postSplashScreenTheme">@style/Theme.SplashScreen</item>
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
+    <!-- Base application theme -->
+    <style name="Theme.Equanotepadplats" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/primary_light</item>
+        <item name="colorOnPrimary">@color/on_primary_light</item>
+        <item name="colorPrimaryContainer">@color/primary_container_light</item>
+        <item name="colorOnPrimaryContainer">@color/on_primary_container_light</item>
+        <item name="colorSecondary">@color/secondary_light</item>
+        <item name="colorOnSecondary">@color/on_secondary_light</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
-    <style name="Theme.SplashScreen" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorOnPrimary">@color/white</item>
+
+    <!-- Splash Screen Theme -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <!-- Set the splash screen background color -->
+        <item name="windowSplashScreenBackground">@color/primary_light</item>
+
+        <!-- Set the splash screen icon/logo -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo_drawable</item>
+
+        <!-- Icon background color (optional) -->
+        <item name="windowSplashScreenIconBackgroundColor">@color/primary_container_light</item>
+
+        <!-- Post splash screen theme -->
+        <item name="postSplashScreenTheme">@style/Theme.Equanotepadplats</item>
+    </style>
+
+    <!-- Theme for SplashScreen (deprecated but still needed) -->
+    <style name="Theme.SplashScreen" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/primary_light</item>
+        <item name="android:statusBarColor">@color/primary_light</item>
     </style>
 </resources>

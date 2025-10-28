@@ -1,189 +1,161 @@
 package com.example.equa_notepad_plats.view_models
 
-import android.content.Context
-import android.util.Log
+import android.app.Activity
+import android.webkit.ConsoleMessage
 import androidx.credentials.CredentialManager
-import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.equa_notepad_plats.data.repositories.UserRepository
+import com.example.equa_notepad_plats.data.local.entities.UserEntity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.Google
+import io.github.jan.supabase.auth.providers.builtin.IDToken
+import io.github.jan.supabase.exceptions.RestException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.security.MessageDigest
 import java.util.UUID
 
-data class LoginUiState(
-    val isLoading: Boolean = false,
-    val error: String = "",
-    val email: String = "",
-    val name: String = ""
-)
+sealed class LoginUiState {
+    object Initial : LoginUiState()
+    object Loading : LoginUiState()
+    data class Success(val user: UserEntity) : LoginUiState()
+    data class Error(val message: String) : LoginUiState()
+}
 
-class LoginViewModel : ViewModel() {
-
-    private val _uiState = MutableStateFlow(LoginUiState())
+class LoginViewModel(
+    private val repository: UserRepository,
+    private val supabaseClient: SupabaseClient
+) : ViewModel() {
+    private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Initial)
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    private val WEB_CLIENT_ID = "web_client_id"
+    init {
+        checkExistingUser()
+    }
 
-    fun signInWithGoogle(
-        credentialManager: CredentialManager,
-        context: Context,
-        onSuccess: (email: String, name: String) -> Unit,
-        onError: (error: String) -> Unit
-    ) {
+    private fun checkExistingUser() {
         viewModelScope.launch {
             try {
-                _uiState.value = _uiState.value.copy(isLoading = true, error = "")
-
-                val nonce = generateNonce()
-
-                val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
-                    .setFilterByAuthorizedAccounts(true)
-                    .setServerClientId(WEB_CLIENT_ID)
-                    .setAutoSelectEnabled(true)
-                    .setNonce(nonce)
-                    .build()
-
-                val request: GetCredentialRequest = GetCredentialRequest.Builder()
-                    .addCredentialOption(googleIdOption)
-                    .build()
-
-                val result = credentialManager.getCredential(
-                    request = request,
-                    context = context,
-                )
-
-                handleCredentialResponse(result, onSuccess, onError)
-
-            } catch (e: GetCredentialException) {
-                Log.e("LoginViewModel", "Sign in failed, attempting sign up", e)
-                _uiState.value = _uiState.value.copy(isLoading = false)
-                onError("No se encontraron cuentas autorizadas. Intenta registrarte.")
+                val user = repository.getUser()
+                if (user != null) {
+                    _uiState.value = LoginUiState.Success(user)
+                }
+            } catch (e: Exception) {
+                // mantener estado inicial
             }
         }
     }
 
-    fun signUpWithGoogle(
-        credentialManager: CredentialManager,
-        context: Context,
-        onSuccess: (email: String, name: String) -> Unit,
-        onError: (error: String) -> Unit
-    ) {
+    fun signInWithGoogle(activity: Activity, webClientId: String) {
         viewModelScope.launch {
+            _uiState.value = LoginUiState.Loading
+
             try {
-                _uiState.value = _uiState.value.copy(isLoading = true, error = "")
+                val credentialManager = CredentialManager.create(activity)
 
-                val nonce = generateNonce()
+                val rawNonce = UUID.randomUUID().toString()
+                val bytes = rawNonce.toByteArray()
+                val md = MessageDigest.getInstance("SHA-256")
+                val digest = md.digest(bytes)
+                val hashedNonce = digest.fold("") { str, it ->
+                    str + "%02x".format(it)
+                }
 
-                val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
+                val googleIdOption = GetGoogleIdOption.Builder()
                     .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId(WEB_CLIENT_ID)
-                    .setNonce(nonce)
+                    .setServerClientId(webClientId)
+                    .setNonce(hashedNonce)
                     .build()
 
-                val request: GetCredentialRequest = GetCredentialRequest.Builder()
+                val request = GetCredentialRequest.Builder()
                     .addCredentialOption(googleIdOption)
                     .build()
 
                 val result = credentialManager.getCredential(
                     request = request,
-                    context = context,
+                    context = activity
                 )
 
-                handleCredentialResponse(result, onSuccess, onError)
+                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(
+                    result.credential.data
+                )
+
+                val googleIdToken = googleIdTokenCredential.idToken
+
+                supabaseClient.auth.signInWith(IDToken) {
+                    idToken = googleIdToken
+                    provider = Google
+                    nonce = rawNonce
+                }
+
+                val session = supabaseClient.auth.currentSessionOrNull()
+                val supabaseUser = session?.user
+
+                if (supabaseUser != null) {
+                    val user = UserEntity(
+                        id = supabaseUser.id,
+                        name = googleIdTokenCredential.displayName ?: "Usuario",
+                        email = googleIdTokenCredential.id,
+                        photoUrl = googleIdTokenCredential.profilePictureUri?.toString(),
+                        isGuest = false
+                    )
+
+                    repository.insertUser(user)
+                    _uiState.value = LoginUiState.Success(user)
+                } else {
+                    _uiState.value = LoginUiState.Error("No se pudo obtener la sesión del usuario")
+                }
 
             } catch (e: GetCredentialException) {
-                Log.e("LoginViewModel", "Sign up failed", e)
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = "Error durante el registro: ${e.message}"
+                _uiState.value = LoginUiState.Error(
+                    "Error al iniciar sesión: ${e.message}"
                 )
-                onError(e.message ?: "Error desconocido")
+            } catch (e: GoogleIdTokenParsingException) {
+                _uiState.value = LoginUiState.Error(
+                    "Error al procesar token de Google: ${e.message}"
+                )
+            } catch (e: RestException) {
+                _uiState.value = LoginUiState.Error(
+                    "Error de Supabase: ${e.message}"
+                )
+            } catch (e: Exception) {
+                _uiState.value = LoginUiState.Error(
+                    "Error inesperado: ${e.message}"
+                )
             }
         }
     }
 
-    private suspend fun handleCredentialResponse(
-        result: androidx.credentials.GetCredentialResponse,
-        onSuccess: (email: String, name: String) -> Unit,
-        onError: (error: String) -> Unit
-    ) {
-        try {
-            val credential = result.credential
+    fun signInAsGuest() {
+        viewModelScope.launch {
+            _uiState.value = LoginUiState.Loading
 
-            when (credential) {
-                is CustomCredential -> {
-                    if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-                        try {
-                            val googleIdTokenCredential = GoogleIdTokenCredential
-                                .createFrom(credential.data)
+            try {
+                val guestUser = UserEntity(
+                    id = "guest_${System.currentTimeMillis()}",
+                    name = "Invitado",
+                    email = "guest@local.com",
+                    photoUrl = null,
+                    isGuest = true
+                )
 
-                            val idToken = googleIdTokenCredential.idToken
-                            val displayName = googleIdTokenCredential.displayName ?: "Usuario"
-                            val email = googleIdTokenCredential.id
+                repository.insertUser(guestUser)
+                _uiState.value = LoginUiState.Success(guestUser)
 
-                            Log.d("LoginViewModel", "Authentication successful")
-                            Log.d("LoginViewModel", "Email: $email")
-                            Log.d("LoginViewModel", "Name: $displayName")
-
-                            // TODO: valir idtoken
-                            // val isValid = validateTokenOnServer(idToken)
-
-                            _uiState.value = _uiState.value.copy(
-                                isLoading = false,
-                                email = email,
-                                name = displayName
-                            )
-
-                            onSuccess(email, displayName)
-
-                        } catch (e: GoogleIdTokenParsingException) {
-                            Log.e("LoginViewModel", "Invalid Google ID token", e)
-                            _uiState.value = _uiState.value.copy(
-                                isLoading = false,
-                                error = "Token inválido"
-                            )
-                            onError("Token inválido: ${e.message}")
-                        }
-                    } else {
-                        val error = "Tipo de credencial no reconocido"
-                        Log.e("LoginViewModel", error)
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            error = error
-                        )
-                        onError(error)
-                    }
-                }
-
-                else -> {
-                    val error = "Tipo de credencial inesperado"
-                    Log.e("LoginViewModel", error)
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = error
-                    )
-                    onError(error)
-                }
+            } catch (e: Exception) {
+                _uiState.value = LoginUiState.Error(
+                    "Error modo invitado: ${e.message}"
+                )
             }
-
-        } catch (e: Exception) {
-            Log.e("LoginViewModel", "Error handling credential response", e)
-            _uiState.value = _uiState.value.copy(
-                isLoading = false,
-                error = "Error: ${e.message}"
-            )
-            onError(e.message ?: "Error desconocido")
         }
-    }
-
-    private fun generateNonce(): String {
-        return UUID.randomUUID().toString()
     }
 }
