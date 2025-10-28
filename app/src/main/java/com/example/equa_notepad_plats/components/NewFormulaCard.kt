@@ -1,8 +1,6 @@
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,15 +14,13 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun FormulaEdit(modifier: Modifier, isEdit: Boolean) {
     var name by remember { mutableStateOf("") }
-    var formula by remember { mutableStateOf("") }
     // to do edit formula
     Column(
         modifier = Modifier
             .padding(16.dp)
-            .fillMaxWidth()
+            .fillMaxSize()
             .border(1.dp, Color.Black, shape = RoundedCornerShape(8.dp))
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Sección Name
@@ -55,10 +51,11 @@ fun FormulaEdit(modifier: Modifier, isEdit: Boolean) {
             )
         }
 
-        // Sección Formula
+        // Sección Formula - takes up half the remaining space
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .weight(1f)
                 .padding(bottom = 24.dp)
         ) {
             Text(
@@ -67,18 +64,18 @@ fun FormulaEdit(modifier: Modifier, isEdit: Boolean) {
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
-            OutlinedTextField(
-                value = formula,
-                onValueChange = { formula = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = {
-                    if (isEdit) {
-                        /* Se hace la llamada para obtener la formula */
-                    }
-                    else{Text("Enter formula")
-                    } },
-                singleLine = true
-            )
+            if (isEdit) {
+
+
+            }
+            else{
+                Text("Enter formula")
+                MathFormulaEditor(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                )
+            }
         }
 
         // Botón Submit
@@ -89,7 +86,7 @@ fun FormulaEdit(modifier: Modifier, isEdit: Boolean) {
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(40.dp)
         ) {
             Text(
                 text = "Submit",
@@ -104,6 +101,8 @@ fun FormulaEdit(modifier: Modifier, isEdit: Boolean) {
 @Composable
 fun FormulaScreenPreview() {
     MaterialTheme {
-        FormulaEdit(modifier = Modifier, isEdit = false)
+        Scaffold { paddingValues ->
+            FormulaEdit(modifier = Modifier.padding(paddingValues), isEdit = false)
+        }
     }
 }

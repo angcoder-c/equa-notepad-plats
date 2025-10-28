@@ -62,7 +62,9 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
-
+    implementation("androidx.credentials:credentials:1.6.0-beta03")
+    implementation("androidx.credentials:credentials-play-services-auth:1.6.0-beta03")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.core.ktx)
