@@ -1,5 +1,9 @@
 package com.example.equa_notepad_plats.Activities
 
+import FractionInputDialog
+import MathFormulaEditor
+import MathKeyboard
+import PowerInputDialog
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,6 +18,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.unit.dp
 import com.example.equa_notepad_plats.data.repositories.FormulaRepository
 import com.example.equa_notepad_plats.data.DatabaseProvider
@@ -21,6 +26,7 @@ import com.example.equa_notepad_plats.ui.theme.AppTheme
 import com.example.equa_notepad_plats.view_models.FormulaViewModel
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
 import com.example.equa_notepad_plats.AppNavHost
 import com.example.equa_notepad_plats.FormulaDetailRoute
@@ -80,11 +86,6 @@ fun FormulaScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.isSaved) {
-        if (uiState.isSaved) {
-            onSaveSuccess()
-        }
-    }
 
     Scaffold(
         topBar = {
@@ -121,7 +122,9 @@ fun FormulaScreen(
             // titulo de la formula
             OutlinedTextField(
                 value = uiState.name,
-                onValueChange = { viewModel.updateName(it) },
+                onValueChange = {
+                    viewModel.updateName(it)
+                },
                 label = {
                     Text("Nombre")
                         },
@@ -134,27 +137,105 @@ fun FormulaScreen(
             )
 
             // text field de la formula TODO: escribir en latex
-            OutlinedTextField(
-                value = uiState.formulaText,
-                onValueChange = { viewModel.updateFormulaText(it) },
-                label = {
-                    Text("Formula")
-                        },
-                placeholder = {
-                    Text("Ingresar formula")
-                              },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3,
-                maxLines = 6,
-                shape = RoundedCornerShape(12.dp)
-            )
+            Box(modifier = Modifier.size(500.dp))
+            {
+                var showKeyboard by remember { mutableStateOf(false) }
+                var showFractionDialog by remember { mutableStateOf(false) }
+                var showPowerDialog by remember { mutableStateOf(false) }
+                var showRootDialog by remember { mutableStateOf(false) }
+                var currentInputType by remember { mutableStateOf(InputType.NONE) }
 
-            // descripcion
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                ) {
+                    // Formula display
+                    OutlinedTextField(
+                        value = uiState.formulaText,
+                        onValueChange = { viewModel.updateFormulaText(it) },
+                        label = { Text("Formula") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(0.5f),
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 24.sp)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
+                        onClick = { showKeyboard = !showKeyboard },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(if (showKeyboard) "Hide Math Keyboard" else "Show Math Keyboard")
+                    }
+
+                    if (showKeyboard) {
+                        MathKeyboard(modifier = Modifier.fillMaxWidth().weight(2f),
+                            onSymbolClick = { symbol ->
+                                when (symbol.inputType) {
+                                    InputType.FRACTION -> {
+                                        showFractionDialog = true
+                                    }
+                                    InputType.POWER -> {
+                                        currentInputType = InputType.POWER
+                                        showPowerDialog = true
+                                    }
+                                    InputType.SQUARE_ROOT, InputType.NTH_ROOT -> {
+                                        currentInputType = symbol.inputType
+                                        showRootDialog = true
+                                    }
+                                    else -> {
+                                        viewModel.updateFormulaText(uiState.formulaText + symbol.value)
+                                    }
+                                }
+                            },
+                            onDismiss = { showKeyboard = false }
+                        )
+                    }
+                }
+
+                // Dialogs
+                if (showFractionDialog) {
+                    FractionInputDialog(
+                        onConfirm = { num, den ->
+                            viewModel.updateFormulaText(uiState.formulaText + "($num/$den)")
+                            showFractionDialog = false
+                        },
+                        onDismiss = { showFractionDialog = false }
+                    )
+                }
+
+                if (showPowerDialog) {
+                    PowerInputDialog(
+                        title = "Enter Exponent",
+                        label = "Power",
+                        onConfirm = { value ->
+                            viewModel.updateFormulaText(uiState.formulaText + "^($value)")
+                            showPowerDialog = false
+                        },
+                        onDismiss = { showPowerDialog = false }
+                    )
+                }
+
+                if (showRootDialog) {
+                    PowerInputDialog(
+                        title = if (currentInputType == InputType.NTH_ROOT) "Enter Root Index" else "Enter Value",
+                        label = if (currentInputType == InputType.NTH_ROOT) "n" else "Value",
+                        onConfirm = { value ->
+                            val newFormula = if (currentInputType == InputType.NTH_ROOT) "ⁿ√($value)" else "√($value)"
+                            viewModel.updateFormulaText(uiState.formulaText + newFormula)
+                            showRootDialog = false
+                        },
+                        onDismiss = { showRootDialog = false }
+                    )
+                }
+            }
             OutlinedTextField(
                 value = uiState.description,
                 onValueChange = {
                     viewModel.updateDescription(it)
-                                },
+                },
                 label = {
                     Text("Descripcion")
                         },
