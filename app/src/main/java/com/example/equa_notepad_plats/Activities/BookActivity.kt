@@ -34,38 +34,6 @@ import com.example.equa_notepad_plats.view_models.BookViewModel
 import com.example.equa_notepad_plats.components.formulas.EmptyFormulasState
 import com.example.equa_notepad_plats.components.formulas.FormulaCard
 
-class BookActivity : ComponentActivity() {
-    private lateinit var viewModel: BookViewModel
-    private var bookId: Int = -1
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-
-        bookId = intent.getIntExtra("bookId", -1)
-
-        val database = DatabaseProvider.getDatabase(applicationContext)
-        val repository = FormulaRepository(database)
-        val bookRepository = BookRepository(database)
-        viewModel = BookViewModel(repository, bookRepository, bookId)
-
-        setContent {
-            AppTheme (darkTheme = isSystemInDarkTheme()) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    val navController = rememberNavController()
-
-                    AppNavHost(
-                        navController = navController,
-                        startDestination = BookRoute
-                    )
-                }
-            }
-        }
-    }
-}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookScreen(

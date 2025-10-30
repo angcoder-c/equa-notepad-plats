@@ -36,35 +36,6 @@ import com.example.equa_notepad_plats.components.books.NewBookDialog
 import com.example.equa_notepad_plats.components.books.EmptyBooksState
 import com.example.equa_notepad_plats.components.books.BookCard
 
-class HomeActivity : ComponentActivity() {
-    private lateinit var viewModel: HomeViewModel
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-
-        val database = DatabaseProvider.getDatabase(applicationContext)
-        val repository = BookRepository(database)
-        viewModel = HomeViewModel(repository)
-
-        setContent {
-            AppTheme (darkTheme = isSystemInDarkTheme()) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    val navController = rememberNavController()
-
-                    AppNavHost(
-                        navController = navController,
-                        startDestination = HomeRoute,
-                    )
-                }
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(

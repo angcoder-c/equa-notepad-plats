@@ -1,28 +1,26 @@
 package com.example.equa_notepad_plats.view_models
 
-import android.app.Activity
-import android.webkit.ConsoleMessage
+import android.content.Context
+import android.util.Log
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
-import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.equa_notepad_plats.data.repositories.UserRepository
+import com.example.equa_notepad_plats.BuildConfig
 import com.example.equa_notepad_plats.data.local.entities.UserEntity
+import com.example.equa_notepad_plats.data.repositories.UserRepository
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.providers.Google
-import io.github.jan.supabase.auth.providers.builtin.IDToken
-import io.github.jan.supabase.exceptions.RestException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.security.MessageDigest
 import java.util.UUID
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.Google
+import io.github.jan.supabase.auth.providers.builtin.IDToken
 
 sealed class LoginUiState {
     object Initial : LoginUiState()
@@ -42,99 +40,143 @@ class LoginViewModel(
         checkExistingUser()
     }
 
+    // verifica si ya hay un usuario guardado
     private fun checkExistingUser() {
         viewModelScope.launch {
             try {
-                val user = repository.getUser()
-                if (user != null) {
-                    _uiState.value = LoginUiState.Success(user)
+                // usuario guardado localmente
+                val localUser = repository.getUser()
+                if (localUser != null) {
+                    _uiState.value = LoginUiState.Success(localUser)
+                    return@launch
                 }
-            } catch (e: Exception) {
-                // mantener estado inicial
-            }
+
+                // sesion activa en Supabase
+                val session = supabaseClient.auth.currentSessionOrNull()
+                if (session != null) {
+                    handleSupabaseSession()
+                }
+            } catch (e: Exception) {}
         }
     }
 
-    fun signInWithGoogle(activity: Activity, webClientId: String) {
+    // crea un nonce hasheado para Google Sign-In
+    // https://www.youtube.com/watch?v=ZgYvexniGDA
+    private fun createNonce(): Pair<String, String> {
+        val rawNonce = UUID.randomUUID().toString()
+        val bytes = rawNonce.toByteArray()
+        val md = MessageDigest.getInstance("SHA-256")
+        val digest = md.digest(bytes)
+        val hashedNonce = digest.fold("") { str, it ->
+            str + "%02x".format(it)
+        }
+        return Pair(rawNonce, hashedNonce)
+    }
+
+    // inicia el proceso de google sign in
+    // https://www.youtube.com/watch?v=ZgYvexniGDA
+    fun signInWithGoogle(context: Context) {
         viewModelScope.launch {
             _uiState.value = LoginUiState.Loading
 
             try {
-                val credentialManager = CredentialManager.create(activity)
+                val (rawNonce, hashedNonce) = createNonce()
 
-                val rawNonce = UUID.randomUUID().toString()
-                val bytes = rawNonce.toByteArray()
-                val md = MessageDigest.getInstance("SHA-256")
-                val digest = md.digest(bytes)
-                val hashedNonce = digest.fold("") { str, it ->
-                    str + "%02x".format(it)
-                }
-
+                // google id
                 val googleIdOption = GetGoogleIdOption.Builder()
-                    .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId(webClientId)
+                    .setServerClientId(BuildConfig.WEB_CLIENT_ID)
                     .setNonce(hashedNonce)
+                    .setAutoSelectEnabled(true) // auto-seleccionar cuenta
+                    .setFilterByAuthorizedAccounts(false) // mostrar todas las cuentas
                     .build()
 
                 val request = GetCredentialRequest.Builder()
                     .addCredentialOption(googleIdOption)
                     .build()
 
+                val credentialManager = CredentialManager.create(context)
+
+                // obtener credenciales
                 val result = credentialManager.getCredential(
-                    request = request,
-                    context = activity
+                    context = context,
+                    request = request
                 )
 
-                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(
-                    result.credential.data
-                )
+                val googleIdTokenCredential = GoogleIdTokenCredential
+                    .createFrom(result.credential.data)
 
                 val googleIdToken = googleIdTokenCredential.idToken
 
+                // autenticacion con supabase usando el token de google
                 supabaseClient.auth.signInWith(IDToken) {
                     idToken = googleIdToken
                     provider = Google
                     nonce = rawNonce
                 }
 
-                val session = supabaseClient.auth.currentSessionOrNull()
-                val supabaseUser = session?.user
+                // guardar usuario en base de datos local
+                handleSupabaseSession()
 
-                if (supabaseUser != null) {
-                    val user = UserEntity(
-                        id = supabaseUser.id,
-                        name = googleIdTokenCredential.displayName ?: "Usuario",
-                        email = googleIdTokenCredential.id,
-                        photoUrl = googleIdTokenCredential.profilePictureUri?.toString(),
-                        isGuest = false
-                    )
+            } catch (e: androidx.credentials.exceptions.GetCredentialException) {
+                Log.e("LoginViewModel", "GetCredentialException: ${e.message}", e)
 
-                    repository.insertUser(user)
-                    _uiState.value = LoginUiState.Success(user)
-                } else {
-                    _uiState.value = LoginUiState.Error("No se pudo obtener la sesión del usuario")
+                val errorMessage = when (e) {
+                    is androidx.credentials.exceptions.NoCredentialException ->
+                        "No hay cuentas de Google disponibles. Por favor, agrega una cuenta de Google en tu dispositivo."
+                    is androidx.credentials.exceptions.GetCredentialCancellationException ->
+                        "Inicio de sesión cancelado"
+                    else ->
+                        "Error de credenciales: ${e.message}"
                 }
 
-            } catch (e: GetCredentialException) {
-                _uiState.value = LoginUiState.Error(
-                    "Error al iniciar sesión: ${e.message}"
-                )
-            } catch (e: GoogleIdTokenParsingException) {
-                _uiState.value = LoginUiState.Error(
-                    "Error al procesar token de Google: ${e.message}"
-                )
-            } catch (e: RestException) {
-                _uiState.value = LoginUiState.Error(
-                    "Error de Supabase: ${e.message}"
-                )
+                _uiState.value = LoginUiState.Error(errorMessage)
+
             } catch (e: Exception) {
+                Log.e("LoginViewModel", "Google Sign-In error: ${e.message}", e)
                 _uiState.value = LoginUiState.Error(
-                    "Error inesperado: ${e.message}"
+                    "Error al iniciar sesión: ${e.message ?: "Error desconocido"}"
                 )
             }
         }
     }
 
+    // procesa la sesion actual de supabase y guarda el usuario localmente
+    private suspend fun handleSupabaseSession() {
+        try {
+            val session = supabaseClient.auth.currentSessionOrNull()
+            val supabaseUser = session?.user
+
+            if (supabaseUser != null) {
+                // información del usuario
+                val metadata = supabaseUser.userMetadata
+
+                val name = metadata?.get("full_name")?.toString()
+                    ?: metadata?.get("name")?.toString()
+                    ?: supabaseUser.email?.substringBefore("@")
+                    ?: "Usuario"
+
+                val photoUrl = metadata?.get("avatar_url")?.toString()
+                    ?: metadata?.get("picture")?.toString()
+
+                val user = UserEntity(
+                    id = supabaseUser.id,
+                    name = name,
+                    email = supabaseUser.email ?: "sin-email@local.com",
+                    photoUrl = photoUrl,
+                    isGuest = false
+                )
+
+                repository.insertUser(user)
+                _uiState.value = LoginUiState.Success(user)
+            } else {
+                _uiState.value = LoginUiState.Error("No se pudo obtener la sesión del usuario")
+            }
+        } catch (e: Exception) {
+            _uiState.value = LoginUiState.Error("Error al procesar sesión: ${e.message}")
+        }
+    }
+
+    // entrar como invitado
     fun signInAsGuest() {
         viewModelScope.launch {
             _uiState.value = LoginUiState.Loading
@@ -150,10 +192,34 @@ class LoginViewModel(
 
                 repository.insertUser(guestUser)
                 _uiState.value = LoginUiState.Success(guestUser)
-
             } catch (e: Exception) {
                 _uiState.value = LoginUiState.Error(
-                    "Error modo invitado: ${e.message}"
+                    "Error en modo invitado: ${e.message}"
+                )
+            }
+        }
+    }
+
+    // reinicia el estado de la UI
+    fun resetState() {
+        _uiState.value = LoginUiState.Initial
+    }
+
+    // logout
+    fun signOut() {
+        viewModelScope.launch {
+            try {
+                // cerrar sesión en Supabase
+                supabaseClient.auth.signOut()
+
+                // eliminar usuario de la base de datos local
+                repository.deleteUser()
+
+                // resetear estado
+                _uiState.value = LoginUiState.Initial
+            } catch (e: Exception) {
+                _uiState.value = LoginUiState.Error(
+                    "Error al cerrar sesión: ${e.message}"
                 )
             }
         }

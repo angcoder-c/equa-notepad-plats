@@ -37,34 +37,6 @@ import com.example.equa_notepad_plats.data.repositories.BookRepository
 import com.example.equa_notepad_plats.data.repositories.FormulaRepository
 import com.example.equa_notepad_plats.view_models.BookViewModel
 
-class PracticeActivity : ComponentActivity() {
-    private lateinit var viewModel: BookViewModel
-    private var bookId: Int = -1
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-
-        bookId = intent.getIntExtra("bookId", -1)
-
-        setContent {
-            AppTheme (darkTheme = isSystemInDarkTheme()){
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    val navController = rememberNavController()
-
-                    AppNavHost(
-                        navController = navController,
-                        startDestination = PracticeRoute
-                    )
-                }
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PracticeScreen(

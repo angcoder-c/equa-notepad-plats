@@ -6,61 +6,30 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
+        android:name=".DeltimeApplication"
         android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.Equanotepadplats"
-        tools:targetApi="31">
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
-        <!-- LoginActivity -->
         <activity
             android:name=".Activities.LoginActivity"
             android:exported="true"
-            android:theme="@style/Theme.App.Starting">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="com.example.equa_notepad_plats"
+                    android:host="login" />
+            </intent-filter>
         </activity>
-
-        <!-- HomeActivity -->
-        <activity
-            android:name=".Activities.HomeActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Equanotepadplats"
-            android:windowSoftInputMode="adjustResize" />
-
-        <!-- ProfileActivity -->
-        <activity
-            android:name=".Activities.ProfileActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Equanotepadplats" />
-
-        <!-- BookActivity -->
-        <activity
-            android:name=".Activities.BookActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Equanotepadplats"
-            android:windowSoftInputMode="adjustResize" />
-
-        <!-- FormulaActivity -->
-        <activity
-            android:name=".Activities.FormulaActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Equanotepadplats"
-            android:windowSoftInputMode="adjustResize" />
-
-        <!-- PracticeActivity -->
-        <activity
-            android:name=".Activities.PracticeActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Equanotepadplats"
-            android:windowSoftInputMode="adjustResize" />
-
     </application>
 
 </manifest>

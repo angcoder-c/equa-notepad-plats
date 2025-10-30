@@ -6,7 +6,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,9 +34,6 @@ import com.example.equa_notepad_plats.view_models.LoginViewModel
 import com.example.equa_notepad_plats.components.LoginButtons
 
 class LoginActivity : ComponentActivity() {
-
-    private lateinit var viewModel: LoginViewModel
-
     override fun onCreate(savedInstanceState: Bundle?) {
         // splash screen
         installSplashScreen()
@@ -62,7 +58,6 @@ class LoginActivity : ComponentActivity() {
         }
     }
 }
-
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel = LoginViewModel(

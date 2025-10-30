@@ -29,37 +29,10 @@ import com.example.equa_notepad_plats.ProfileRoute
 import com.example.equa_notepad_plats.components.exercise.ExerciseGeneratorCard
 import com.example.equa_notepad_plats.data.repositories.UserRepository
 import com.example.equa_notepad_plats.data.DatabaseProvider
+import com.example.equa_notepad_plats.data.SupabaseClientProvider
 import com.example.equa_notepad_plats.ui.theme.AppTheme
+import com.example.equa_notepad_plats.view_models.LoginViewModel
 import com.example.equa_notepad_plats.view_models.ProfileViewModel
-
-class ProfileActivity : ComponentActivity() {
-    private lateinit var viewModel: ProfileViewModel
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-
-        val database = DatabaseProvider.getDatabase(applicationContext)
-        val repository = UserRepository(database)
-        viewModel = ProfileViewModel(repository)
-
-        setContent {
-            AppTheme (darkTheme = isSystemInDarkTheme()) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    val navController = rememberNavController()
-
-                    AppNavHost(
-                        navController = navController,
-                        startDestination = ProfileRoute
-                    )
-                }
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,6 +50,14 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var loginViewModel = LoginViewModel(
+        UserRepository(
+            DatabaseProvider.getDatabase(
+                LocalContext.current
+            )
+        ),
+        SupabaseClientProvider.client
+    )
 
     LaunchedEffect(uiState.isLoggedOut) {
         if (uiState.isLoggedOut) {
@@ -197,6 +178,7 @@ fun ProfileScreen(
             // logout
             OutlinedButton(
                 onClick = {
+                    loginViewModel.signOut()
                     showLogoutDialog = true
                           },
                 modifier = Modifier

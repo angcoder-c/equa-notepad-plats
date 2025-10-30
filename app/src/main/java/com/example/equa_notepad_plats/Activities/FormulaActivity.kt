@@ -26,42 +26,6 @@ import com.example.equa_notepad_plats.AppNavHost
 import com.example.equa_notepad_plats.FormulaDetailRoute
 import com.example.equa_notepad_plats.LoginRoute
 
-class FormulaActivity : ComponentActivity() {
-    private lateinit var viewModel: FormulaViewModel
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-
-        val bookId = intent.getIntExtra("bookId", -1)
-        val formulaId = intent.getIntExtra("formulaId", -1)
-
-        val database = DatabaseProvider.getDatabase(applicationContext)
-        val repository = FormulaRepository(database)
-        viewModel = FormulaViewModel(
-            repository,
-            bookId,
-            if (formulaId != -1) formulaId else null
-        )
-
-        setContent {
-            AppTheme (darkTheme = isSystemInDarkTheme()){
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    val navController = rememberNavController()
-
-                    AppNavHost(
-                        navController = navController,
-                        startDestination = FormulaDetailRoute
-                    )
-                }
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FormulaScreen(
