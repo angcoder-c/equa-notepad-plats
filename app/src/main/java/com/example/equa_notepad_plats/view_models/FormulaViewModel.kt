@@ -107,7 +107,7 @@ class FormulaViewModel(
                     )
                     repository.updateFormula(formula)
                 } else {
-                    // Crear nueva fórmula
+                    // crear nueva fórmula
                     val formula = FormulaEntity(
                         bookId = bookId,
                         name = state.name,

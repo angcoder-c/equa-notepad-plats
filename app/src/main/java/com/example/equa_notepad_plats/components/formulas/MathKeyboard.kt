@@ -406,7 +406,7 @@ fun MathFormulaEditor(modifier: Modifier = Modifier) {
             label = { Text("Formula") },
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
+                .weight(0.5f),
             textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 24.sp)
         )
 
