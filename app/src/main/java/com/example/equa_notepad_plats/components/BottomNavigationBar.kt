@@ -2,7 +2,7 @@ package com.example.equa_notepad_plats.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -14,7 +14,7 @@ sealed class BottomNavItem(
     val label: String
 ) {
     object Home : BottomNavItem("home", Icons.Default.Home, "Inicio")
-    object Books : BottomNavItem("books", Icons.Default.Menu, "Libros")
+    object Practice : BottomNavItem("practice", Icons.Default.Face, "Práctica")
     object Profile : BottomNavItem("profile", Icons.Default.Person, "Perfil")
 }
 
@@ -25,7 +25,7 @@ fun BottomNavigationBar(
 ) {
     val items = listOf(
         BottomNavItem.Home,
-        BottomNavItem.Books,
+        BottomNavItem.Practice,
         BottomNavItem.Profile
     )
 
