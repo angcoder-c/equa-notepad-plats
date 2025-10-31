@@ -31,11 +31,12 @@ import com.example.equa_notepad_plats.PracticeRoute
 import com.example.equa_notepad_plats.ui.theme.AppTheme
 import com.example.equa_notepad_plats.view_models.PracticeViewModel
 import com.example.equa_notepad_plats.view_models.ProfileViewModel
+import com.example.equa_notepad_plats.view_models.BookViewModel
 import com.example.equa_notepad_plats.components.exercise.ExerciseGeneratorCard
+import com.example.equa_notepad_plats.components.exercise.ChatMessageComponent
 import com.example.equa_notepad_plats.data.DatabaseProvider
 import com.example.equa_notepad_plats.data.repositories.BookRepository
 import com.example.equa_notepad_plats.data.repositories.FormulaRepository
-import com.example.equa_notepad_plats.view_models.BookViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,10 +78,22 @@ fun PracticeScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ){
-            ExerciseGeneratorCard(onExerciseGeneratorClick = {
-                viewModel.generateExerciseWithAI(bookId)
-            })
+            ExerciseGeneratorCard(
+                onExerciseGeneratorClick = {
+                    viewModel.generateExerciseWithAI(bookId)
+                },
+                onClearMessagesClick = {
+                    viewModel.clearMessages()
+                }
+            )
+
+            ChatMessageComponent(
+                messages = uiState.messages,
+                isLoading = uiState.isLoading
+            )
         }
     }
 }

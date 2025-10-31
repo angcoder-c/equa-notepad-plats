@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -78,10 +79,14 @@ fun BookScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onPracticeClick) {
+                    IconButton(
+                        onClick = onPracticeClick,
+                        modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
+
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Perfil"
+                            imageVector = Icons.Default.Face,
+                            contentDescription = "Repasar"
                         )
                     }
                 },
