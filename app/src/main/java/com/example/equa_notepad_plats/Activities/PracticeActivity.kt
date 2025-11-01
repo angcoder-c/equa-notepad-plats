@@ -18,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,14 +29,16 @@ import androidx.navigation.compose.rememberNavController
 import com.example.equa_notepad_plats.AppNavHost
 import com.example.equa_notepad_plats.LoginRoute
 import com.example.equa_notepad_plats.PracticeRoute
+import com.example.equa_notepad_plats.components.exercise.BookSelector
 import com.example.equa_notepad_plats.ui.theme.AppTheme
 import com.example.equa_notepad_plats.view_models.PracticeViewModel
 import com.example.equa_notepad_plats.view_models.ProfileViewModel
+import com.example.equa_notepad_plats.view_models.BookViewModel
 import com.example.equa_notepad_plats.components.exercise.ExerciseGeneratorCard
+import com.example.equa_notepad_plats.components.exercise.ChatMessageComponent
 import com.example.equa_notepad_plats.data.DatabaseProvider
 import com.example.equa_notepad_plats.data.repositories.BookRepository
 import com.example.equa_notepad_plats.data.repositories.FormulaRepository
-import com.example.equa_notepad_plats.view_models.BookViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,6 +49,7 @@ fun PracticeScreen(
     viewModel: PracticeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val selectedBookId by viewModel.selectedBookId.collectAsState()
 
     // header
     Scaffold(
@@ -77,10 +81,27 @@ fun PracticeScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ){
-            ExerciseGeneratorCard(onExerciseGeneratorClick = {
-                viewModel.generateExerciseWithAI(bookId)
-            })
+            BookSelector(
+                bookId=bookId,
+                repository = BookRepository(DatabaseProvider.getDatabase(LocalContext.current)),
+                viewModel = viewModel
+            )
+            ExerciseGeneratorCard(
+                onExerciseGeneratorClick = {
+                    viewModel.generateExerciseWithAI(bookId)
+                },
+                onClearMessagesClick = {
+                    viewModel.clearMessages()
+                }
+            )
+
+            ChatMessageComponent(
+                messages = uiState.messages,
+                isLoading = uiState.isLoading
+            )
         }
     }
 }

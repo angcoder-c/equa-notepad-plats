@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -65,7 +66,7 @@ fun BookScreen(
             TopAppBar(
                 title = {
                     Text(
-                        uiState.book?.name ?: "Formulario 1",
+                        uiState.book?.name ?: "",
                         style = MaterialTheme.typography.headlineSmall
                     )
                 },
@@ -74,14 +75,6 @@ fun BookScreen(
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Volver"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onPracticeClick) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Perfil"
                         )
                     }
                 },

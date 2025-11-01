@@ -100,7 +100,6 @@ fun FormulaScreen(
                 shape = RoundedCornerShape(12.dp)
             )
 
-            // text field de la formula TODO: escribir en latex
             Box(modifier = Modifier.size(500.dp))
             {
                 var showKeyboard by remember { mutableStateOf(false) }
@@ -112,7 +111,7 @@ fun FormulaScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp)
+                        .padding(8.dp)
                 ) {
                     // Formula display
                     OutlinedTextField(

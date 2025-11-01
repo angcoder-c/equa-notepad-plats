@@ -2,6 +2,7 @@ package com.example.equa_notepad_plats.Activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.equa_notepad_plats.AppNavHost
+import com.example.equa_notepad_plats.BuildConfig
 import com.example.equa_notepad_plats.LoginRoute
 import com.example.equa_notepad_plats.ProfileRoute
 import com.example.equa_notepad_plats.components.exercise.ExerciseGeneratorCard
@@ -74,14 +76,6 @@ fun ProfileScreen(
                         style = MaterialTheme.typography.headlineSmall
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Volver"
-                        )
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
@@ -114,6 +108,7 @@ fun ProfileScreen(
                     ) {
                         // profile picture
                         if (uiState.user!!.photoUrl != null) {
+                            Log.d("ProfileScreen", "Photo URL: ${uiState.user!!.photoUrl}")
                             AsyncImage(
                                 model = uiState.user!!.photoUrl,
                                 contentDescription = "Foto de perfil",
