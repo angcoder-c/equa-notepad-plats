@@ -18,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,6 +29,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.equa_notepad_plats.AppNavHost
 import com.example.equa_notepad_plats.LoginRoute
 import com.example.equa_notepad_plats.PracticeRoute
+import com.example.equa_notepad_plats.components.exercise.BookSelector
 import com.example.equa_notepad_plats.ui.theme.AppTheme
 import com.example.equa_notepad_plats.view_models.PracticeViewModel
 import com.example.equa_notepad_plats.view_models.ProfileViewModel
@@ -47,6 +49,7 @@ fun PracticeScreen(
     viewModel: PracticeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val selectedBookId by viewModel.selectedBookId.collectAsState()
 
     // header
     Scaffold(
@@ -81,6 +84,11 @@ fun PracticeScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ){
+            BookSelector(
+                bookId=bookId,
+                repository = BookRepository(DatabaseProvider.getDatabase(LocalContext.current)),
+                viewModel = viewModel
+            )
             ExerciseGeneratorCard(
                 onExerciseGeneratorClick = {
                     viewModel.generateExerciseWithAI(bookId)

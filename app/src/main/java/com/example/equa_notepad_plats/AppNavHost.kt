@@ -18,6 +18,7 @@ import com.example.equa_notepad_plats.view_models.*
 import androidx.compose.ui.platform.LocalContext
 import com.example.equa_notepad_plats.data.SupabaseClientProvider
 import com.example.equa_notepad_plats.components.BottomNavigationBar
+import android.util.Log
 
 @Composable
 fun AppNavHost(
@@ -38,7 +39,9 @@ fun AppNavHost(
         ProfileRoute::class.qualifiedName
     )
 
-    val showBottomNav = currentRoute in routesWithBottomNav
+    val showBottomNav = routesWithBottomNav.any { route ->
+        currentRoute?.startsWith(route.toString()) == true
+    }
 
     Scaffold(
         bottomBar = {
@@ -55,7 +58,7 @@ fun AppNavHost(
                             "home" -> navController.navigate(HomeRoute) {
                                 popUpTo(HomeRoute) { inclusive = true }
                             }
-                            "practice" -> navController.navigate(PracticeRoute(bookId = 1)) {
+                            "practice" -> navController.navigate(PracticeRoute(bookId = 0)) {
                                 popUpTo(HomeRoute) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true

@@ -1,7 +1,11 @@
 package com.example.equa_notepad_plats.view_models
 
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.equa_notepad_plats.data.DatabaseProvider
+import com.example.equa_notepad_plats.data.local.entities.BookEntity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,7 +26,12 @@ data class PracticeUiState(
 
 class PracticeViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(PracticeUiState())
+    private val _selectedBook = MutableStateFlow<BookEntity?>(null)
+    private val _selectedBookId = MutableStateFlow<Int?>(null)
+
     val uiState: StateFlow<PracticeUiState> = _uiState.asStateFlow()
+    val selectedBook: StateFlow<BookEntity?> = _selectedBook.asStateFlow()
+    val selectedBookId: StateFlow<Int?> = _selectedBookId.asStateFlow()
 
     private val randomExercises = listOf(
         "¿En qué puedo ayudarte?",
@@ -77,5 +86,10 @@ class PracticeViewModel : ViewModel() {
 
     fun clearMessages() {
         _uiState.value = _uiState.value.copy(messages = emptyList())
+    }
+
+    fun setBookId(id: Int, book: BookEntity?) {
+        _selectedBook.value = book
+        _selectedBookId.value = id
     }
 }

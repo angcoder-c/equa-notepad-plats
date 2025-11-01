@@ -66,7 +66,7 @@ fun BookScreen(
             TopAppBar(
                 title = {
                     Text(
-                        uiState.book?.name ?: "Formulario 1",
+                        uiState.book?.name ?: "",
                         style = MaterialTheme.typography.headlineSmall
                     )
                 },
@@ -75,18 +75,6 @@ fun BookScreen(
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Volver"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = onPracticeClick,
-                        modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
-
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Face,
-                            contentDescription = "Repasar"
                         )
                     }
                 },
