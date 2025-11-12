@@ -150,4 +150,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation("com.google.android.gms:play-services-auth:21.2.0")
+    implementation ("androidx.compose.material:material-icons-extended")
 }

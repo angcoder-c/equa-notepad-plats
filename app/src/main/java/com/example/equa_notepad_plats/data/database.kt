@@ -15,7 +15,9 @@ object DatabaseProvider {
                 context.applicationContext,
                 AppDatabase::class.java,
                 "deltime_database"
-            ).build()
+            )
+                .addMigrations(MIGRATION_1_2) // Add migration
+                .build()
             INSTANCE = instance
             instance
         }

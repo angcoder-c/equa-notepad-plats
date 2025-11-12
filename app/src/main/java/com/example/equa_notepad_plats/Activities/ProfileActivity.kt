@@ -1,13 +1,6 @@
+
 package com.example.equa_notepad_plats.Activities
 
-import android.content.Intent
-import android.os.Bundle
-import android.util.Log
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,13 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import com.example.equa_notepad_plats.AppNavHost
-import com.example.equa_notepad_plats.BuildConfig
-import com.example.equa_notepad_plats.LoginRoute
-import com.example.equa_notepad_plats.ProfileRoute
-import com.example.equa_notepad_plats.components.exercise.ExerciseGeneratorCard
 import com.example.equa_notepad_plats.data.repositories.UserRepository
 import com.example.equa_notepad_plats.data.DatabaseProvider
 import com.example.equa_notepad_plats.data.SupabaseClientProvider
@@ -41,23 +28,17 @@ import com.example.equa_notepad_plats.view_models.ProfileViewModel
 fun ProfileScreen(
     viewModel: ProfileViewModel = ProfileViewModel(
         UserRepository(
-        DatabaseProvider
-            .getDatabase(
-                LocalContext.current
-            )
-    )),
+            DatabaseProvider.getDatabase(LocalContext.current)
+        )
+    ),
     onBackClick: () -> Unit,
     onLogoutSuccess: () -> Unit,
-    onExerciseGeneratorClick: () -> Unit
+    onSyncClick: () -> Unit // NEW: Navigate to sync screen
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
-    var loginViewModel = LoginViewModel(
-        UserRepository(
-            DatabaseProvider.getDatabase(
-                LocalContext.current
-            )
-        ),
+    val loginViewModel = LoginViewModel(
+        UserRepository(DatabaseProvider.getDatabase(LocalContext.current)),
         SupabaseClientProvider.client
     )
 
@@ -66,7 +47,7 @@ fun ProfileScreen(
             onLogoutSuccess()
         }
     }
-    // header
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -88,9 +69,9 @@ fun ProfileScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // informacion del usuario
+            // User Information Card
             if (uiState.user != null) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -106,16 +87,14 @@ fun ProfileScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // profile picture
+                        // Profile picture
                         if (uiState.user!!.photoUrl != null) {
-                            Log.d("ProfileScreen", "Photo URL: ${uiState.user!!.photoUrl}")
                             AsyncImage(
                                 model = uiState.user!!.photoUrl,
                                 contentDescription = "Foto de perfil",
                                 modifier = Modifier
                                     .size(80.dp)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primaryContainer)
                             )
                         } else {
                             Surface(
@@ -123,9 +102,7 @@ fun ProfileScreen(
                                 shape = CircleShape,
                                 color = MaterialTheme.colorScheme.primaryContainer
                             ) {
-                                Box(
-                                    contentAlignment = Alignment.Center
-                                ) {
+                                Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         imageVector = Icons.Default.AccountCircle,
                                         contentDescription = null,
@@ -141,27 +118,65 @@ fun ProfileScreen(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text(
-                                text = "Nombre usuaio:",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
                                 text = uiState.user!!.name,
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Bold
                             )
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Text(
-                                text = "Correo electronico:",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
                             Text(
                                 text = uiState.user!!.email,
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Sync to Cloud Button (NEW)
+            if (uiState.user?.isGuest == false) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.FileUpload,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.secondary
+                                )
+                            }
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Sincronización en la Nube",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                "Respalda tus formularios",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                        IconButton(onClick = onSyncClick) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Ir a sincronización"
                             )
                         }
                     }
@@ -170,12 +185,12 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // logout
+            // Logout Button
             OutlinedButton(
                 onClick = {
                     loginViewModel.signOut()
                     showLogoutDialog = true
-                          },
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -221,28 +236,14 @@ fun ProfileScreen(
     }
 }
 
-// preview ligth
 @Preview(showBackground = true)
 @Composable
-fun ProfileScreenPreview () {
+fun ProfileScreenPreview() {
     AppTheme {
         ProfileScreen(
             onBackClick = {},
             onLogoutSuccess = {},
-            onExerciseGeneratorClick = {}
-        )
-    }
-}
-
-// preview dark
-@Preview(showBackground = true)
-@Composable
-fun ProfileScreenPreviewDark () {
-    AppTheme (darkTheme = true) {
-        ProfileScreen(
-            onBackClick = {},
-            onLogoutSuccess = {},
-            onExerciseGeneratorClick = {}
+            onSyncClick = {}
         )
     }
 }

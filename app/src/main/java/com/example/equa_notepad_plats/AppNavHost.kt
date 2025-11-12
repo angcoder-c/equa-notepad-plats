@@ -7,9 +7,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.example.equa_notepad_plats.Activities.*
 import com.example.equa_notepad_plats.data.DatabaseProvider
@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.example.equa_notepad_plats.data.SupabaseClientProvider
 import com.example.equa_notepad_plats.components.BottomNavigationBar
 import android.util.Log
+import androidx.navigation.compose.composable
 
 @Composable
 fun AppNavHost(
@@ -179,8 +180,8 @@ fun AppNavHost(
                             popUpTo(0) { inclusive = true }
                         }
                     },
-                    onExerciseGeneratorClick = {
-                        navController.navigate(ExerciseGeneratorRoute)
+                    onSyncClick = {
+                        navController.navigate(SyncRoute)
                     }
                 )
             }
@@ -195,6 +196,15 @@ fun AppNavHost(
                 PracticeScreen(
                     viewModel = viewModel,
                     bookId = practiceRoute.bookId.toString(),
+                    onBackClick = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            // Sync Screen
+            composable<SyncRoute> {
+                SyncScreen(
                     onBackClick = {
                         navController.popBackStack()
                     }

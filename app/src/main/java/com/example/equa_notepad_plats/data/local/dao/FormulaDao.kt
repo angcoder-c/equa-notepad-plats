@@ -16,6 +16,15 @@ interface FormulaDao {
     @Query("SELECT * FROM formulas WHERE id = :formulaId")
     suspend fun getFormulaById(formulaId: Int): FormulaEntity?
 
+    @Query("SELECT * FROM formulas WHERE remoteId = :remoteId")
+    suspend fun getFormulaByRemoteId(remoteId: String): FormulaEntity?
+
+    @Query("SELECT * FROM formulas WHERE isDirty = 1 OR remoteId IS NULL")
+    suspend fun getDirtyFormulas(): List<FormulaEntity>
+
+    @Query("SELECT * FROM formulas WHERE bookId = :bookId AND (isDirty = 1 OR remoteId IS NULL)")
+    suspend fun getDirtyFormulasByBookId(bookId: Int): List<FormulaEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFormula(formula: FormulaEntity): Long
 
