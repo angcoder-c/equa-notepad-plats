@@ -190,7 +190,9 @@ fun AppNavHost(
                 val practiceRoute: PracticeRoute = backStackEntry.toRoute()
                 val repository = FormulaRepository(database)
                 val repositoryBook = BookRepository(database)
-                val viewModel = PracticeViewModel()
+                val viewModel = PracticeViewModel(
+                    repositoryFormula = repository,
+                )
 
                 PracticeScreen(
                     viewModel = viewModel,

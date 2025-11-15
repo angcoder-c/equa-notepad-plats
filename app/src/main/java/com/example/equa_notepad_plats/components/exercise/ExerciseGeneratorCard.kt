@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun ExerciseGeneratorCard(
+    bookmarked: Boolean,
     onExerciseGeneratorClick: () -> Unit,
     onClearMessagesClick: () -> Unit = {}
 ) {
@@ -59,12 +60,14 @@ fun ExerciseGeneratorCard(
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onTertiaryContainer
             )
-
-            Text(
-                text = "Ejercicio generado...",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onTertiaryContainer
-            )
+            if (!bookmarked) {
+                Text(
+                    "Selecciona un formulario para generar un ejercicio",
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -72,6 +75,7 @@ fun ExerciseGeneratorCard(
             ) {
                 Button(
                     onClick = onExerciseGeneratorClick,
+                    enabled = bookmarked,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.tertiary,
@@ -80,21 +84,6 @@ fun ExerciseGeneratorCard(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text("Generar con IA 🔮")
-                }
-
-                Button(
-                    onClick = onClearMessagesClick,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary,
-                        contentColor = MaterialTheme.colorScheme.onSecondary
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Limpiar",
-                        modifier = Modifier.size(18.dp)
-                    )
                 }
             }
         }

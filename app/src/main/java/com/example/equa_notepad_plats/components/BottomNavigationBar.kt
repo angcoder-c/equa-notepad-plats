@@ -1,6 +1,7 @@
 package com.example.equa_notepad_plats.components
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Person
@@ -14,7 +15,7 @@ sealed class BottomNavItem(
     val label: String
 ) {
     object Home : BottomNavItem("home", Icons.Default.Home, "Inicio")
-    object Practice : BottomNavItem("practice", Icons.Default.Face, "Práctica")
+    object Practice : BottomNavItem("practice", Icons.Default.Create, "Práctica")
     object Profile : BottomNavItem("profile", Icons.Default.Person, "Perfil")
 }
 

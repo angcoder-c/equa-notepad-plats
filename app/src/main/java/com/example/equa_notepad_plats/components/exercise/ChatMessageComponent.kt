@@ -56,13 +56,15 @@ fun ChatMessageComponent(
                 .height(400.dp)
                 .padding(16.dp)
         ) {
-            Text(
-                text = "Ejercicios Generados",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            if (messages.isNotEmpty()) {
+                Text(
+                    text = "Ejercicios Generados",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
 
             LazyColumn(
                 state = listState,

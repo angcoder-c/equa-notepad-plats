@@ -1,16 +1,20 @@
 package com.example.equa_notepad_plats.view_models
 
+import android.util.Log
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.equa_notepad_plats.data.DatabaseProvider
 import com.example.equa_notepad_plats.data.local.entities.BookEntity
+import com.example.equa_notepad_plats.data.repositories.BookRepository
+import com.example.equa_notepad_plats.data.repositories.FormulaRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.example.equa_notepad_plats.network.OpenRouterClient
 
 data class ChatMessage(
     val content: String,
@@ -24,7 +28,9 @@ data class PracticeUiState(
     val error: String = ""
 )
 
-class PracticeViewModel : ViewModel() {
+class PracticeViewModel (
+    private val repositoryFormula: FormulaRepository,
+) : ViewModel() {
     private val _uiState = MutableStateFlow(PracticeUiState())
     private val _selectedBook = MutableStateFlow<BookEntity?>(null)
     private val _selectedBookId = MutableStateFlow<Int?>(null)
@@ -55,34 +61,43 @@ class PracticeViewModel : ViewModel() {
                     isLoading = true,
                     error = ""
                 )
+                if (_selectedBookId.value != null) {
+                    repositoryFormula.getFormulasByBookId(_selectedBookId.value ?: 0).collect { formulas ->
+                        val formulasText = formulas.joinToString(separator = "\n") {
+                            "- ${it.name}: ${it.formulaText} :${it.description}"
+                        }
+                        val prompt = """
+                        Eres un generador de ejercicios de matemáticas.
+                        Usa solo las siguientes fórmulas para generar un ejercicio:
+    
+                        $formulasText
+    
+                        Genera un ejercicio adecuado para estudiantes.
+                    """.trimIndent()
+                        Log.d("generateExerciseWithAI", "prompt: $prompt")
 
-                // Simulate AI processing time
-                delay(1500)
+                        val aiResponse = OpenRouterClient.ask(prompt)
 
-                // Generate random exercise
-                val randomExercise = randomExercises.random()
+                        val newMessage = ChatMessage(
+                            content = aiResponse,
+                            isFromUser = false
+                        )
 
-                // Add the new message to the list
-                val currentMessages = _uiState.value.messages
-                val newMessage = ChatMessage(
-                    content = randomExercise,
-                    isFromUser = false
-                )
-
-                _uiState.value = _uiState.value.copy(
-                    messages = currentMessages + newMessage,
-                    isLoading = false,
-                    error = ""
-                )
-
+                        _uiState.value = _uiState.value.copy(
+                            messages = _uiState.value.messages + newMessage,
+                            isLoading = false
+                        )
+                    }
+                }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "Error al generar ejercicio: ${e.message}"
+                    error = "Error al comunicar con la IA: ${e.message}"
                 )
             }
         }
     }
+
 
     fun clearMessages() {
         _uiState.value = _uiState.value.copy(messages = emptyList())

@@ -56,6 +56,12 @@ android {
             "\"${properties.getProperty("SUPABASE_API_KEY", "")}\""
         )
 
+        buildConfigField(
+            "String",
+            "OPEN_ROUTER_KEY",
+            "\"${properties.getProperty("OPEN_ROUTER_KEY", "")}\""
+        )
+
         manifestPlaceholders["supabaseAuthCallback"] =
             properties.getProperty("SUPABASE_AUTH_CALLBACK_URL", "com.example.equa_notepad_plats://login")
     }
@@ -126,6 +132,7 @@ dependencies {
     // room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
+    implementation(libs.androidx.runtime)
     ksp(libs.room.compiler)
     implementation("androidx.credentials:credentials:1.6.0-beta03")
     implementation("androidx.credentials:credentials-play-services-auth:1.6.0-beta03")
