@@ -10,5 +10,8 @@ data class BookEntity(
     val name: String,
     val description: String,
     val imageUri: String? = null,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val remoteId: String? = null,
+    val lastSyncedAt: Long? = null,
+    val isDirty: Boolean = false
 )

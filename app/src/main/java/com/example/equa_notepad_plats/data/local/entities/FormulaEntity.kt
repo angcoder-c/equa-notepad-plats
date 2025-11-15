@@ -4,7 +4,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.example.equa_notepad_plats.data.local.entities.BookEntity
 
 @Entity(
     tableName = "formulas",
@@ -26,5 +25,8 @@ data class FormulaEntity(
     val formulaText: String,
     val description: String? = null,
     val imageUri: String? = null,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val remoteId: String? = null,
+    val lastSyncedAt: Long? = null,
+    val isDirty: Boolean = false
 )
