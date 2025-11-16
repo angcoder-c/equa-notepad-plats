@@ -88,7 +88,7 @@ object SupabaseApiService {
 
     suspend fun createRemoteFormula(formula: RemoteFormula): Result<ApiResponse<RemoteFormula>> {
         return try {
-            val response = client.post("${BASE_URL}/functions/v1/register-book") {
+            val response = client.post("${BASE_URL}/functions/v1/register-formula") {
                 header("Content-Type", "application/json")
                 header("Authorization", "Bearer ${BuildConfig.SUPABASE_API_KEY}")
                 setBody(mapOf(
