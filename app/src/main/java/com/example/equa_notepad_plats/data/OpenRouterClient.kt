@@ -1,11 +1,12 @@
-package com.example.equa_notepad_plats.network
+package com.example.equa_notepad_plats.data
 
 import com.example.equa_notepad_plats.BuildConfig
-import io.ktor.client.*
-import io.ktor.client.engine.okhttp.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import org.json.JSONObject
 
 object OpenRouterClient {

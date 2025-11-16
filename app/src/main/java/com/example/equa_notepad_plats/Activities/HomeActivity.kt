@@ -46,26 +46,96 @@ fun HomeScreen(
         )
     ),
     onBookClick: (Int) -> Unit,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    // Datos del usuario actual (debes obtenerlos de tu sistema de autenticación)
+    currentUserId: String = "default_user_id", // TODO: Obtener del AuthManager o SharedPreferences
+    currentUserName: String = "Usuario", // TODO: Obtener del perfil del usuario
+    currentUserEmail: String = "usuario@ejemplo.com", // TODO: Obtener del perfil
+    currentUserPhotoUrl: String? = null,
+    isGuest: Boolean = false
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var showDialog by remember {
-        mutableStateOf(false)
+    var showDialog by remember { mutableStateOf(false) }
+
+    // Mostrar snackbar para mensajes de sincronización
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Observar cambios en syncMessage y error
+    LaunchedEffect(uiState.syncMessage, uiState.error) {
+        uiState.syncMessage?.let { message ->
+            snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Short
+            )
+            viewModel.clearSyncStatus()
+        }
+        uiState.error?.let { error ->
+            snackbarHostState.showSnackbar(
+                message = error,
+                duration = SnackbarDuration.Long
+            )
+            viewModel.clearSyncStatus()
+        }
     }
-    // header
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        "Formularios",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            "Formularios",
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                        // Indicador de sincronización
+                        if (uiState.isSyncing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                ),
+                actions = {
+                    // Botón para sincronizar libros pendientes
+                    val dirtyBooksCount = uiState.books.count { it.isDirty && it.remoteId == null }
+                    if (dirtyBooksCount > 0) {
+                        IconButton(
+                            onClick = {
+                                viewModel.syncBooksToRemote(
+                                    userId = currentUserId
+                                )
+                            },
+                            enabled = !uiState.isSyncing
+                        ) {
+                            Badge(
+                                containerColor = MaterialTheme.colorScheme.error
+                            ) {
+                                Text("$dirtyBooksCount")
+                            }
+                            Icon(
+                                Icons.Default.CloudUpload,
+                                contentDescription = "Sincronizar libros pendientes"
+                            )
+                        }
+                    }
+
+                    // Botón de perfil
+                    IconButton(onClick = onProfileClick) {
+                        Icon(
+                            Icons.Default.AccountCircle,
+                            contentDescription = "Perfil"
+                        )
+                    }
+                }
             )
         },
         floatingActionButton = {
@@ -83,25 +153,40 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-
-            // cargando..
+            // Cargando...
             if (uiState.isLoading && uiState.books.isEmpty()) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CircularProgressIndicator()
+                    if (uiState.syncMessage != null) {
+                        Text(
+                            text = uiState.syncMessage!!,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
-            // sin formularios
+            // Sin formularios
             else if (uiState.books.isEmpty()) {
                 EmptyBooksState(
                     modifier = Modifier.align(Alignment.Center)
                 )
-            } else {
+            }
+            // Lista de formularios
+            else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(uiState.books) { book ->
+                    items(
+                        items = uiState.books,
+                        key = { book -> book.id }
+                    ) { book ->
                         BookCard(
                             book = book,
                             onClick = { onBookClick(book.id) },
@@ -112,13 +197,22 @@ fun HomeScreen(
             }
         }
 
+        // Dialog para crear nuevo libro
         if (showDialog) {
             NewBookDialog(
-                onDismiss = {
-                    showDialog = false
-                            },
+                onDismiss = { showDialog = false },
                 onConfirm = { name, description ->
-                    viewModel.createBook(name, description)
+                    // Crear libro con sincronización automática
+                    viewModel.createBookAndSync(
+                        name = name,
+                        description = description,
+                        imageUri = null,
+                        userId = currentUserId,
+                        userName = currentUserName,
+                        userEmail = currentUserEmail,
+                        userPhotoUrl = currentUserPhotoUrl,
+                        isGuest = isGuest
+                    )
                     showDialog = false
                 }
             )
@@ -133,7 +227,10 @@ fun HomeScreenPreviewLight() {
         Surface {
             HomeScreen(
                 onBookClick = {},
-                onProfileClick = {}
+                onProfileClick = {},
+                currentUserId = "preview_user",
+                currentUserName = "Usuario Preview",
+                currentUserEmail = "preview@ejemplo.com"
             )
         }
     }
@@ -146,7 +243,10 @@ fun HomeScreenPreviewDark() {
         Surface {
             HomeScreen(
                 onBookClick = {},
-                onProfileClick = {}
+                onProfileClick = {},
+                currentUserId = "preview_user",
+                currentUserName = "Usuario Preview",
+                currentUserEmail = "preview@ejemplo.com"
             )
         }
     }

@@ -7,7 +7,9 @@ import androidx.credentials.GetCredentialRequest
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.equa_notepad_plats.BuildConfig
+import com.example.equa_notepad_plats.data.SupabaseApiService
 import com.example.equa_notepad_plats.data.local.entities.UserEntity
+import com.example.equa_notepad_plats.data.remote.RemoteUser
 import com.example.equa_notepad_plats.data.repositories.UserRepository
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -114,7 +116,6 @@ class LoginViewModel(
                     nonce = rawNonce
                 }
 
-                // guardar usuario en base de datos local
                 handleSupabaseSession()
 
             } catch (e: androidx.credentials.exceptions.GetCredentialException) {
@@ -147,7 +148,6 @@ class LoginViewModel(
             val supabaseUser = session?.user
 
             if (supabaseUser != null) {
-                // información del usuario
                 val metadata = supabaseUser.userMetadata
 
                 val name = metadata?.get("full_name")?.toString()
@@ -161,13 +161,28 @@ class LoginViewModel(
                 val user = UserEntity(
                     id = supabaseUser.id,
                     name = name,
-                    email = supabaseUser.email ?: "sin-email@local.com",
+                    email = supabaseUser.email ?: "",
+                    photoUrl = photoUrl,
+                    isGuest = false
+                )
+                repository.insertUser(user)
+
+                val remoteUser = RemoteUser(
+                    id = supabaseUser.id,
+                    name = name,
+                    email = user.email,
                     photoUrl = photoUrl,
                     isGuest = false
                 )
 
-                repository.insertUser(user)
+                val apiResult = SupabaseApiService.registerRemoteUser(remoteUser)
+
+                if (apiResult==null) {
+                    Log.e("LoginViewModel", "WARN: Remote user registration failed")
+                }
+
                 _uiState.value = LoginUiState.Success(user)
+
             } else {
                 _uiState.value = LoginUiState.Error("No se pudo obtener la sesión del usuario")
             }

@@ -179,9 +179,6 @@ fun AppNavHost(
                         navController.navigate(LoginRoute) {
                             popUpTo(0) { inclusive = true }
                         }
-                    },
-                    onSyncClick = {
-                        navController.navigate(SyncRoute)
                     }
                 )
             }
@@ -198,15 +195,6 @@ fun AppNavHost(
                 PracticeScreen(
                     viewModel = viewModel,
                     bookId = practiceRoute.bookId.toString(),
-                    onBackClick = {
-                        navController.popBackStack()
-                    }
-                )
-            }
-
-            // Sync Screen
-            composable<SyncRoute> {
-                SyncScreen(
                     onBackClick = {
                         navController.popBackStack()
                     }

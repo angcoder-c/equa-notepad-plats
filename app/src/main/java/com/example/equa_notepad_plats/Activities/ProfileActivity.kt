@@ -45,7 +45,6 @@ fun ProfileScreen(
     )),
     onBackClick: () -> Unit,
     onLogoutSuccess: () -> Unit,
-    onSyncClick: () -> Unit // NEW: Navigate to sync screen
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
@@ -148,57 +147,6 @@ fun ProfileScreen(
                 }
             }
 
-            // Sync to Cloud Button (NEW)
-            if (uiState.user?.isGuest == false) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Surface(
-                            modifier = Modifier.size(48.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.KeyboardArrowUp,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.secondary
-                                )
-                            }
-                        }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                "Sincronización en la Nube",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                "Respalda tus formularios",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                        }
-                        IconButton(onClick = onSyncClick) {
-                            Icon(
-                                imageVector = Icons.Default.Clear,
-                                contentDescription = "Ir a sincronización"
-                            )
-                        }
-                    }
-                }
-            }
-
             Spacer(modifier = Modifier.weight(1f))
 
             // Logout Button
@@ -260,7 +208,6 @@ fun ProfileScreenPreview() {
         ProfileScreen(
             onBackClick = {},
             onLogoutSuccess = {},
-            onSyncClick = {}
         )
     }
 }

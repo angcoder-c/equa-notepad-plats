@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import com.example.equa_notepad_plats.network.OpenRouterClient
+import com.example.equa_notepad_plats.data.OpenRouterClient
 
 data class ChatMessage(
     val content: String,

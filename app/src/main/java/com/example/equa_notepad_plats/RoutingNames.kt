@@ -32,6 +32,3 @@ object ProfileRoute
 
 @Serializable
 object ExerciseGeneratorRoute
-
-@Serializable
-object SyncRoute
