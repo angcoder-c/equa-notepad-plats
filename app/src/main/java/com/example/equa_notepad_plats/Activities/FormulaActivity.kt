@@ -17,10 +17,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.unit.dp
 import com.example.equa_notepad_plats.data.repositories.FormulaRepository
+import com.example.equa_notepad_plats.data.repositories.UserRepository
 import com.example.equa_notepad_plats.data.DatabaseProvider
 import com.example.equa_notepad_plats.ui.theme.AppTheme
 import com.example.equa_notepad_plats.view_models.FormulaViewModel
@@ -46,19 +48,64 @@ fun FormulaScreen(
         null
     ),
     onBackClick: () -> Unit,
-    onSaveSuccess: () -> Unit
+    onSaveSuccess: () -> Unit,
+    // User data for sync
+    currentUserId: String = "default_user_id",
+    currentUserName: String = "Usuario",
+    currentUserEmail: String = "usuario@ejemplo.com",
+    currentUserPhotoUrl: String? = null,
+    isGuest: Boolean = false
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
+    // Show sync messages
+    LaunchedEffect(uiState.syncMessage, uiState.error) {
+        uiState.syncMessage?.let { message ->
+            snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Short
+            )
+            viewModel.clearSyncStatus()
+        }
+        uiState.error?.let { error ->
+            snackbarHostState.showSnackbar(
+                message = error,
+                duration = SnackbarDuration.Long
+            )
+            viewModel.clearSyncStatus()
+        }
+    }
+
+    // Navigate back on successful save
+    LaunchedEffect(uiState.isSaved) {
+        if (uiState.isSaved) {
+            onSaveSuccess()
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        "Nueva formula",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            "Nueva formula",
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                        // Sync indicator
+                        if (uiState.isSyncing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
@@ -83,7 +130,7 @@ fun FormulaScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // titulo de la formula
+            // Formula name
             OutlinedTextField(
                 value = uiState.name,
                 onValueChange = {
@@ -91,10 +138,10 @@ fun FormulaScreen(
                 },
                 label = {
                     Text("Nombre")
-                        },
+                },
                 placeholder = {
                     Text("Ingresar nombre")
-                              },
+                },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp)
@@ -194,6 +241,7 @@ fun FormulaScreen(
                     )
                 }
             }
+
             OutlinedTextField(
                 value = uiState.description,
                 onValueChange = {
@@ -201,18 +249,18 @@ fun FormulaScreen(
                 },
                 label = {
                     Text("Descripcion")
-                        },
+                },
                 placeholder = {
                     Text("Ingresar descripcion")
-                              },
+                },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
                 maxLines = 6,
                 shape = RoundedCornerShape(12.dp)
             )
 
-            // mensaje de error
-            if (uiState.error != null) {
+            // Error message
+            if (uiState.error != null && !uiState.isSyncing) {
                 Text(
                     text = uiState.error!!,
                     color = MaterialTheme.colorScheme.error,
@@ -220,30 +268,36 @@ fun FormulaScreen(
                 )
             }
 
-            // create button
+            // Save and sync button
             Button(
                 onClick = {
-                    viewModel.saveFormula()
-                    onSaveSuccess()
-                          },
+                    // Use saveFormulaAndSync for automatic sync
+                    viewModel.saveFormulaAndSync(
+                        userId = currentUserId,
+                        userName = currentUserName,
+                        userEmail = currentUserEmail,
+                        userPhotoUrl = currentUserPhotoUrl,
+                        isGuest = isGuest
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = !uiState.isLoading,
+                enabled = !uiState.isLoading && !uiState.isSyncing,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             ) {
-                if (uiState.isLoading) {
+                if (uiState.isLoading || uiState.isSyncing) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 } else {
                     Text(
-                        "Crear",
+                        "Crear y Sincronizar",
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -252,10 +306,10 @@ fun FormulaScreen(
     }
 }
 
-// preview ligth
+// preview light
 @Preview(showBackground = true)
 @Composable
-fun FormulaScreenPreview () {
+fun FormulaScreenPreview() {
     AppTheme {
         FormulaScreen(
             onBackClick = {},
@@ -267,7 +321,7 @@ fun FormulaScreenPreview () {
 // preview dark
 @Preview
 @Composable
-fun FormulaScreenPreviewDark () {
+fun FormulaScreenPreviewDark() {
     AppTheme(darkTheme = true) {
         FormulaScreen(
             onBackClick = {},

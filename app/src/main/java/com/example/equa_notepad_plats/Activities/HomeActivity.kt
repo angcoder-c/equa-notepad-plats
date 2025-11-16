@@ -1,13 +1,5 @@
 package com.example.equa_notepad_plats.Activities
 
-import android.content.Intent
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,16 +12,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.Wallpapers
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.compose.rememberNavController
-import com.example.equa_notepad_plats.AppNavHost
-import com.example.equa_notepad_plats.HomeRoute
-import com.example.equa_notepad_plats.LoginRoute
 import com.example.equa_notepad_plats.data.repositories.BookRepository
 import com.example.equa_notepad_plats.data.DatabaseProvider
-import com.example.equa_notepad_plats.data.local.entities.BookEntity
 import com.example.equa_notepad_plats.ui.theme.AppTheme
 import com.example.equa_notepad_plats.view_models.HomeViewModel
 import com.example.equa_notepad_plats.components.books.NewBookDialog
@@ -48,9 +33,9 @@ fun HomeScreen(
     onBookClick: (Int) -> Unit,
     onProfileClick: () -> Unit,
     // Datos del usuario actual (debes obtenerlos de tu sistema de autenticación)
-    currentUserId: String = "default_user_id", // TODO: Obtener del AuthManager o SharedPreferences
-    currentUserName: String = "Usuario", // TODO: Obtener del perfil del usuario
-    currentUserEmail: String = "usuario@ejemplo.com", // TODO: Obtener del perfil
+    currentUserId: String = "default_user_id",
+    currentUserName: String = "Usuario",
+    currentUserEmail: String = "usuario@ejemplo.com",
     currentUserPhotoUrl: String? = null,
     isGuest: Boolean = false
 ) {
@@ -98,6 +83,20 @@ fun HomeScreen(
                                 strokeWidth = 2.dp
                             )
                         }
+                        // Indicador de modo invitado
+                        if (isGuest) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    "Modo Invitado",
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -105,26 +104,29 @@ fun HomeScreen(
                     titleContentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 actions = {
-                    // Botón para sincronizar libros pendientes
-                    val dirtyBooksCount = uiState.books.count { it.isDirty && it.remoteId == null }
-                    if (dirtyBooksCount > 0) {
-                        IconButton(
-                            onClick = {
-                                viewModel.syncBooksToRemote(
-                                    userId = currentUserId
-                                )
-                            },
-                            enabled = !uiState.isSyncing
-                        ) {
-                            Badge(
-                                containerColor = MaterialTheme.colorScheme.error
+                    // Botón para sincronizar libros pendientes (solo si NO es invitado)
+                    if (!isGuest) {
+                        val dirtyBooksCount = uiState.books.count { it.isDirty && it.remoteId == null }
+                        if (dirtyBooksCount > 0) {
+                            IconButton(
+                                onClick = {
+                                    viewModel.syncBooksToRemote(
+                                        userId = currentUserId,
+                                        isGuest = isGuest
+                                    )
+                                },
+                                enabled = !uiState.isSyncing
                             ) {
-                                Text("$dirtyBooksCount")
+                                Badge(
+                                    containerColor = MaterialTheme.colorScheme.error
+                                ) {
+                                    Text("$dirtyBooksCount")
+                                }
+                                Icon(
+                                    Icons.Default.CloudUpload,
+                                    contentDescription = "Sincronizar libros pendientes"
+                                )
                             }
-                            Icon(
-                                Icons.Default.CloudUpload,
-                                contentDescription = "Sincronizar libros pendientes"
-                            )
                         }
                     }
 
@@ -202,7 +204,7 @@ fun HomeScreen(
             NewBookDialog(
                 onDismiss = { showDialog = false },
                 onConfirm = { name, description ->
-                    // Crear libro con sincronización automática
+                    // Crear libro con sincronización automática (solo si NO es invitado)
                     viewModel.createBookAndSync(
                         name = name,
                         description = description,
@@ -247,6 +249,23 @@ fun HomeScreenPreviewDark() {
                 currentUserId = "preview_user",
                 currentUserName = "Usuario Preview",
                 currentUserEmail = "preview@ejemplo.com"
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HomeScreenGuestPreview() {
+    AppTheme(darkTheme = false) {
+        Surface {
+            HomeScreen(
+                onBookClick = {},
+                onProfileClick = {},
+                currentUserId = "guest_123",
+                currentUserName = "Invitado",
+                currentUserEmail = "guest@local.com",
+                isGuest = true
             )
         }
     }

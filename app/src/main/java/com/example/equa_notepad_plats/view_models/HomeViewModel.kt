@@ -233,7 +233,7 @@ class HomeViewModel(
     /**
      * Sincroniza todos los libros pendientes (isDirty=true) con Supabase
      */
-    fun syncBooksToRemote(userId: String) {
+    fun syncBooksToRemote(userId: String, isGuest: Boolean) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isSyncing = true,

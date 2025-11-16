@@ -39,13 +39,13 @@ import com.example.equa_notepad_plats.components.formulas.FormulaCard
 @Composable
 fun BookScreen(
     viewModel: BookViewModel = BookViewModel(
-        FormulaRepository (
+        FormulaRepository(
             DatabaseProvider
                 .getDatabase(
                     LocalContext.current
                 )
         ),
-        BookRepository (
+        BookRepository(
             DatabaseProvider
                 .getDatabase(
                     LocalContext.current
@@ -56,19 +56,53 @@ fun BookScreen(
     onBackClick: () -> Unit,
     onPracticeClick: () -> Unit,
     onNewFormulaClick: () -> Unit,
-    onFormulaClick: (Int) -> Unit
+    onFormulaClick: (Int) -> Unit,
+    // User data for sync
+    currentUserId: String = "default_user_id",
+    isGuest: Boolean = false
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    // header
+    // Show sync messages
+    LaunchedEffect(uiState.syncMessage, uiState.error) {
+        uiState.syncMessage?.let { message ->
+            snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Short
+            )
+            viewModel.clearSyncStatus()
+        }
+        uiState.error?.let { error ->
+            snackbarHostState.showSnackbar(
+                message = error,
+                duration = SnackbarDuration.Long
+            )
+            viewModel.clearSyncStatus()
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        uiState.book?.name ?: "",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            uiState.book?.name ?: "",
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                        // Sync indicator
+                        if (uiState.isSyncing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
@@ -76,6 +110,30 @@ fun BookScreen(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Volver"
                         )
+                    }
+                },
+                actions = {
+                    // Show sync button only if user is NOT a guest and there are dirty formulas
+                    if (!isGuest) {
+                        val dirtyFormulasCount = uiState.formulas.count { it.isDirty && it.remoteId == null }
+                        if (dirtyFormulasCount > 0) {
+                            IconButton(
+                                onClick = {
+                                    viewModel.syncFormulasToRemote(currentUserId, isGuest)
+                                },
+                                enabled = !uiState.isSyncing
+                            ) {
+                                Badge(
+                                    containerColor = MaterialTheme.colorScheme.error
+                                ) {
+                                    Text("$dirtyFormulasCount")
+                                }
+                                Icon(
+                                    Icons.Default.CloudUpload,
+                                    contentDescription = "Sincronizar fórmulas pendientes"
+                                )
+                            }
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -99,24 +157,38 @@ fun BookScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // cargando...
+            // Loading state
             if (uiState.isLoading && uiState.formulas.isEmpty()) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CircularProgressIndicator()
+                    if (uiState.syncMessage != null) {
+                        Text(
+                            text = uiState.syncMessage!!,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             } else if (uiState.formulas.isEmpty()) {
-                // sin formulas
+                // Empty state
                 EmptyFormulasState(
                     modifier = Modifier.align(Alignment.Center)
                 )
             } else {
-                // lista de formulas
+                // Formula list
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(uiState.formulas) { formula ->
+                    items(
+                        items = uiState.formulas,
+                        key = { formula -> formula.id }
+                    ) { formula ->
                         FormulaCard(
                             formula = formula,
                             onClick = { onFormulaClick(formula.id) },
@@ -130,10 +202,10 @@ fun BookScreen(
     }
 }
 
-// preview ligth
+// preview light
 @Preview(showBackground = true)
 @Composable
-fun BookScreenPreview (){
+fun BookScreenPreview() {
     AppTheme {
         BookScreen(
             onBackClick = {},
@@ -147,8 +219,8 @@ fun BookScreenPreview (){
 // preview dark
 @Preview(showBackground = true)
 @Composable
-fun BookScreenDarkPreview (){
-    AppTheme (darkTheme = true) {
+fun BookScreenDarkPreview() {
+    AppTheme(darkTheme = true) {
         BookScreen(
             onBackClick = {},
             onNewFormulaClick = {},
