@@ -39,20 +39,7 @@ class PracticeViewModel (
     val selectedBook: StateFlow<BookEntity?> = _selectedBook.asStateFlow()
     val selectedBookId: StateFlow<Int?> = _selectedBookId.asStateFlow()
 
-    private val randomExercises = listOf(
-        "¿En qué puedo ayudarte?",
-        "Resuelve la siguiente ecuación: 2x + 5 = 15. ¿Cuál es el valor de x?",
-        "Si el área de un rectángulo es 24 cm² y su ancho es 4 cm, ¿cuál es su largo?",
-        "Calcula la derivada de f(x) = 3x² + 2x - 1",
-        "¿Cuánto es √(64) + 3²?",
-        "Si tienes 5 manzanas y comes 2, luego compras el doble de las que tienes, ¿cuántas manzanas tienes al final?",
-        "Resuelve el sistema de ecuaciones:\n2x + y = 7\nx - y = 2",
-        "¿Cuál es el perímetro de un círculo con radio 5 cm? (usa π = 3.14)",
-        "Si un auto viaja a 60 km/h durante 2.5 horas, ¿qué distancia recorre?",
-        "Factoriza la expresión: x² - 9",
-        "¿Cuál es el 15% de 80?",
-        "Si lanzas una moneda 3 veces, ¿cuál es la probabilidad de obtener al menos una cara?"
-    )
+
 
     fun generateExerciseWithAI(bookId: String) {
         viewModelScope.launch {
@@ -69,7 +56,8 @@ class PracticeViewModel (
                         val prompt = """
                         Eres un generador de ejercicios de matemáticas.
                         Usa solo las siguientes fórmulas para generar un ejercicio:
-    
+                        no uses latex para generar tu respuesta y inicia la respuesta con Ejercicio:
+                        utiliza lenguaje natural para describir el ejercicio.
                         $formulasText
     
                         Genera un ejercicio adecuado para estudiantes.
