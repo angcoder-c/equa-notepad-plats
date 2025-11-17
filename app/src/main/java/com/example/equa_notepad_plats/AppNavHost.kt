@@ -193,13 +193,14 @@ fun AppNavHost(
             }
 
             // Formula Detail Screen
+            // Formula Detail Screen
             composable<FormulaDetailRoute> { backStackEntry ->
                 val formulaRoute: FormulaDetailRoute = backStackEntry.toRoute()
                 val repository = FormulaRepository(database)
                 val viewModel = FormulaViewModel(
-                    repository,
-                    formulaRoute.bookId,
-                    if (formulaRoute.formulaId != -1) formulaRoute.formulaId else null
+                    repository = repository,
+                    bookId = formulaRoute.bookId,
+                    formulaId = if (formulaRoute.formulaId != -1) formulaRoute.formulaId else null
                 )
 
                 FormulaScreen(
@@ -209,12 +210,8 @@ fun AppNavHost(
                     },
                     onSaveSuccess = {
                         navController.popBackStack()
-                    },
-                    currentUserId = currentUserId,
-                    currentUserName = currentUserName,
-                    currentUserEmail = currentUserEmail,
-                    currentUserPhotoUrl = currentUserPhotoUrl,
-                    isGuest = isGuest
+                    }
+                    // Removed sync-related parameters
                 )
             }
 

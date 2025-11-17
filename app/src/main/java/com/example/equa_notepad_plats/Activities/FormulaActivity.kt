@@ -1,7 +1,6 @@
 package com.example.equa_notepad_plats.Activities
 
 import FractionInputDialog
-import MathFormulaEditor
 import MathKeyboard
 import PowerInputDialog
 import android.os.Bundle
@@ -15,6 +14,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,6 +31,7 @@ import com.example.equa_notepad_plats.data.DatabaseProvider
 import com.example.equa_notepad_plats.ui.theme.AppTheme
 import com.example.equa_notepad_plats.view_models.FormulaViewModel
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
@@ -38,49 +43,42 @@ import com.example.equa_notepad_plats.LoginRoute
 @Composable
 fun FormulaScreen(
     viewModel: FormulaViewModel = FormulaViewModel(
-        FormulaRepository(
-            DatabaseProvider
-                .getDatabase(
-                    LocalContext.current
-                )
+        repository = FormulaRepository(
+            DatabaseProvider.getDatabase(LocalContext.current)
         ),
-        -1,
-        null
+        bookId = -1,
+        formulaId = null
     ),
     onBackClick: () -> Unit,
-    onSaveSuccess: () -> Unit,
-    // User data for sync
-    currentUserId: String = "default_user_id",
-    currentUserName: String = "Usuario",
-    currentUserEmail: String = "usuario@ejemplo.com",
-    currentUserPhotoUrl: String? = null,
-    isGuest: Boolean = false
+    onSaveSuccess: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Show sync messages
-    LaunchedEffect(uiState.syncMessage, uiState.error) {
-        uiState.syncMessage?.let { message ->
-            snackbarHostState.showSnackbar(
-                message = message,
-                duration = SnackbarDuration.Short
-            )
-            viewModel.clearSyncStatus()
-        }
+    // Determine if we're editing or creating
+    val isEditing = viewModel.formulaId != null
+    val screenTitle = if (isEditing) "Editar fórmula" else "Nueva fórmula"
+    val saveButtonText = if (isEditing) "Actualizar" else "Crear"
+
+    // Show success feedback
+    LaunchedEffect(uiState.error, uiState.isSaved) {
         uiState.error?.let { error ->
             snackbarHostState.showSnackbar(
                 message = error,
                 duration = SnackbarDuration.Long
             )
-            viewModel.clearSyncStatus()
+            viewModel.clearError()
         }
-    }
 
-    // Navigate back on successful save
-    LaunchedEffect(uiState.isSaved) {
         if (uiState.isSaved) {
+            val successMessage = if (isEditing) "¡Fórmula actualizada exitosamente!" else "¡Fórmula creada exitosamente!"
+            snackbarHostState.showSnackbar(
+                message = successMessage,
+                duration = SnackbarDuration.Short
+            )
+            // Navigate back after showing success message
+            kotlinx.coroutines.delay(1000)
             onSaveSuccess()
         }
     }
@@ -95,20 +93,32 @@ fun FormulaScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            "Nueva formula",
+                            screenTitle,
                             style = MaterialTheme.typography.headlineSmall
                         )
-                        // Sync indicator
-                        if (uiState.isSyncing) {
+                        // Loading indicator
+                        if (uiState.isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(20.dp),
                                 strokeWidth = 2.dp
                             )
                         }
+                        // Success indicator
+                        if (uiState.isSaved && !uiState.isLoading) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Guardado",
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(
+                        onClick = onBackClick,
+                        enabled = !uiState.isLoading
+                    ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Volver"
@@ -144,11 +154,18 @@ fun FormulaScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                enabled = !uiState.isLoading
             )
 
-            Box(modifier = Modifier.size(500.dp))
-            {
+            // Formula editor section
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(500.dp),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
                 var showKeyboard by remember { mutableStateOf(false) }
                 var showFractionDialog by remember { mutableStateOf(false) }
                 var showPowerDialog by remember { mutableStateOf(false) }
@@ -158,30 +175,76 @@ fun FormulaScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(8.dp)
+                        .padding(16.dp)
                 ) {
+                    // Section header
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Editor de Fórmulas",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+
+                        // Character count
+                        Text(
+                            text = "${uiState.formulaText.length} caracteres",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     // Formula display
                     OutlinedTextField(
                         value = uiState.formulaText,
                         onValueChange = { viewModel.updateFormulaText(it) },
-                        label = { Text("Formula") },
+                        label = { Text("Fórmula matemática") },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(0.5f),
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 24.sp)
+                            .weight(1f),
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp),
+                        enabled = !uiState.isLoading,
+                        placeholder = {
+                            Text(
+                                "Escribe tu fórmula aquí...",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
+                    // Keyboard toggle button
                     Button(
                         onClick = { showKeyboard = !showKeyboard },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !uiState.isLoading,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (showKeyboard) MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.surfaceVariant
+                        )
                     ) {
-                        Text(if (showKeyboard) "Hide Math Keyboard" else "Show Math Keyboard")
+                        Icon(
+                            imageVector = if (showKeyboard) Icons.Default.KeyboardArrowUp
+                            else Icons.Default.KeyboardArrowDown,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(if (showKeyboard) "Ocultar teclado matemático" else "Mostrar teclado matemático")
                     }
 
+                    // Math Keyboard
                     if (showKeyboard) {
-                        MathKeyboard(modifier = Modifier.fillMaxWidth().weight(2f),
+                        MathKeyboard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1.5f),
                             onSymbolClick = { symbol ->
                                 when (symbol.inputType) {
                                     InputType.FRACTION -> {
@@ -218,8 +281,8 @@ fun FormulaScreen(
 
                 if (showPowerDialog) {
                     PowerInputDialog(
-                        title = "Enter Exponent",
-                        label = "Power",
+                        title = "Ingresar exponente",
+                        label = "Potencia",
                         onConfirm = { value ->
                             viewModel.updateFormulaText(uiState.formulaText + "^($value)")
                             showPowerDialog = false
@@ -230,8 +293,8 @@ fun FormulaScreen(
 
                 if (showRootDialog) {
                     PowerInputDialog(
-                        title = if (currentInputType == InputType.NTH_ROOT) "Enter Root Index" else "Enter Value",
-                        label = if (currentInputType == InputType.NTH_ROOT) "n" else "Value",
+                        title = if (currentInputType == InputType.NTH_ROOT) "Ingresar índice de raíz" else "Ingresar valor",
+                        label = if (currentInputType == InputType.NTH_ROOT) "n" else "Valor",
                         onConfirm = { value ->
                             val newFormula = if (currentInputType == InputType.NTH_ROOT) "ⁿ√($value)" else "√($value)"
                             viewModel.updateFormulaText(uiState.formulaText + newFormula)
@@ -242,71 +305,87 @@ fun FormulaScreen(
                 }
             }
 
+            // Description
             OutlinedTextField(
                 value = uiState.description,
                 onValueChange = {
                     viewModel.updateDescription(it)
                 },
                 label = {
-                    Text("Descripcion")
+                    Text("Descripción")
                 },
                 placeholder = {
-                    Text("Ingresar descripcion")
+                    Text("Ingresar descripción (opcional)")
                 },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
                 maxLines = 6,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                enabled = !uiState.isLoading
             )
 
-            // Error message
-            if (uiState.error != null && !uiState.isSyncing) {
-                Text(
-                    text = uiState.error!!,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
+            // Action buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Cancel button
+                OutlinedButton(
+                    onClick = onBackClick,
+                    modifier = Modifier.weight(1f),
+                    enabled = !uiState.isLoading
+                ) {
+                    Text("Cancelar")
+                }
+
+                // Save button
+                Button(
+                    onClick = {
+                        viewModel.saveFormula()
+                    },
+                    modifier = Modifier.weight(2f),
+                    enabled = !uiState.isLoading &&
+                            uiState.name.isNotBlank() && uiState.formulaText.isNotBlank(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    if (uiState.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Icon(
+                            imageVector = if (isEditing) Icons.Default.Edit else Icons.Default.Save,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            saveButtonText,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                }
             }
 
-            // Save and sync button
-            Button(
-                onClick = {
-                    // Use saveFormulaAndSync for automatic sync
-                    viewModel.saveFormulaAndSync(
-                        userId = currentUserId,
-                        userName = currentUserName,
-                        userEmail = currentUserEmail,
-                        userPhotoUrl = currentUserPhotoUrl,
-                        isGuest = isGuest
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                enabled = !uiState.isLoading && !uiState.isSyncing,
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            // Help text
+            if (uiState.name.isBlank() || uiState.formulaText.isBlank()) {
+                Text(
+                    text = "💡 Completa el nombre y la fórmula para habilitar el guardado",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth()
                 )
-            ) {
-                if (uiState.isLoading || uiState.isSyncing) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                } else {
-                    Text(
-                        "Crear y Sincronizar",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
             }
         }
     }
 }
 
-// preview light
+// Preview light
 @Preview(showBackground = true)
 @Composable
 fun FormulaScreenPreview() {
@@ -318,12 +397,31 @@ fun FormulaScreenPreview() {
     }
 }
 
-// preview dark
+// Preview dark
 @Preview
 @Composable
 fun FormulaScreenPreviewDark() {
     AppTheme(darkTheme = true) {
         FormulaScreen(
+            onBackClick = {},
+            onSaveSuccess = {}
+        )
+    }
+}
+
+// Preview for edit mode
+@Preview(showBackground = true)
+@Composable
+fun FormulaScreenEditPreview() {
+    AppTheme {
+        FormulaScreen(
+            viewModel = FormulaViewModel(
+                repository = FormulaRepository(
+                    DatabaseProvider.getDatabase(LocalContext.current)
+                ),
+                bookId = -1,
+                formulaId = 1 // Simulate edit mode
+            ),
             onBackClick = {},
             onSaveSuccess = {}
         )

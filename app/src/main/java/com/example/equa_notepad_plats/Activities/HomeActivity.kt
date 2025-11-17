@@ -103,41 +103,6 @@ fun HomeScreen(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
                 ),
-                actions = {
-                    // Botón para sincronizar libros pendientes (solo si NO es invitado)
-                    if (!isGuest) {
-                        val dirtyBooksCount = uiState.books.count { it.isDirty && it.remoteId == null }
-                        if (dirtyBooksCount > 0) {
-                            IconButton(
-                                onClick = {
-                                    viewModel.syncBooksToRemote(
-                                        userId = currentUserId,
-                                        isGuest = isGuest
-                                    )
-                                },
-                                enabled = !uiState.isSyncing
-                            ) {
-                                Badge(
-                                    containerColor = MaterialTheme.colorScheme.error
-                                ) {
-                                    Text("$dirtyBooksCount")
-                                }
-                                Icon(
-                                    Icons.Default.CloudUpload,
-                                    contentDescription = "Sincronizar libros pendientes"
-                                )
-                            }
-                        }
-                    }
-
-                    // Botón de perfil
-                    IconButton(onClick = onProfileClick) {
-                        Icon(
-                            Icons.Default.AccountCircle,
-                            contentDescription = "Perfil"
-                        )
-                    }
-                }
             )
         },
         floatingActionButton = {

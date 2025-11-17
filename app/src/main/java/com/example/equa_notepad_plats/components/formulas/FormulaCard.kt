@@ -84,13 +84,6 @@ fun FormulaCard(
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    IconButton(onClick = onShare) {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = "Compartir",
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
                     IconButton(onClick = { showDeleteDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.Delete,

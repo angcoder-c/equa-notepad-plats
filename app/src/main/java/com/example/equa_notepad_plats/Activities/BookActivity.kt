@@ -112,30 +112,7 @@ fun BookScreen(
                         )
                     }
                 },
-                actions = {
-                    // Show sync button only if user is NOT a guest and there are dirty formulas
-                    if (!isGuest) {
-                        val dirtyFormulasCount = uiState.formulas.count { it.isDirty && it.remoteId == null }
-                        if (dirtyFormulasCount > 0) {
-                            IconButton(
-                                onClick = {
-                                    viewModel.syncFormulasToRemote(currentUserId, isGuest)
-                                },
-                                enabled = !uiState.isSyncing
-                            ) {
-                                Badge(
-                                    containerColor = MaterialTheme.colorScheme.error
-                                ) {
-                                    Text("$dirtyFormulasCount")
-                                }
-                                Icon(
-                                    Icons.Default.CloudUpload,
-                                    contentDescription = "Sincronizar fórmulas pendientes"
-                                )
-                            }
-                        }
-                    }
-                },
+
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
